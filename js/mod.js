@@ -1,28 +1,27 @@
 let modInfo = {
-	name: "The ??? Tree",
-	id: "mymod",
-	author: "nobody",
-	pointsName: "points",
+	name: "Excavation Tree",
+	id: "ExcTreAvaE",
+	author: "tree enjoyer",
+	pointsName: "Experience",
 	modFiles: ["layers.js", "tree.js"],
-
-	discordName: "",
-	discordLink: "",
+	discordName: "EXC Discord",
+	discordLink: "https://github.com/Acamaeda/The-Modding-Tree",
 	initialStartPoints: new Decimal (10), // Used for hard resets and new players
 	offlineLimit: 1,  // In hours
 }
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.0",
-	name: "Literally nothing",
+	num: "1.0",
+	name: "The Excavation Update",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
 	<h3>v0.0</h3><br>
-		- Added things.<br>
-		- Added stuff.`
+		- Creation of game.<br>
+		- Yes.`
 
-let winText = `Congratulations! You have reached the end and beaten this game, but for now...`
+let winText = `Congrats, you have dug to the void. Wait for more updates to progress even more.`
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
 // (The ones here are examples, all official functions are already taken care of)
