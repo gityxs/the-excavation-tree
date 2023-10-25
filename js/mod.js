@@ -33,7 +33,7 @@ function getStartPoints(){
 
 // Determines if it should show points/sec
 function canGenPoints(){
-	return hasUpgrade("s", 11)
+	return hasUpgrade("S", 11)
 }
 
 // Calculate points/sec!
