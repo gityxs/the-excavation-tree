@@ -42,6 +42,22 @@ function getPointGen() {
 		return new Decimal(0)
 
 	let gain = new Decimal(1)
+
+	if( hasUpgrade("S", 12) )
+		gain = gain.times(upgradeEffect("S", 12))
+
+	if( hasUpgrade("S", 13) )
+		gain = gain.times(upgradeEffect("S", 13))
+
+	if( hasUpgrade("S", 14) )
+		gain = gain.plus(3)
+
+	if( hasUpgrade("W", 13) )
+		gain = gain.times(upgradeEffect("W", 13))
+
+	if( hasMilestone("ST", 0) )
+		gain = gain.times( player.ST.points.plus(0.25).pow(1.05) )
+
 	return gain
 }
 
