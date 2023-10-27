@@ -56,7 +56,10 @@ function getPointGen() {
 		gain = gain.times(upgradeEffect("W", 13))
 
 	if( hasMilestone("ST", 0) )
-		gain = gain.times( player.ST.points.plus(0.25).pow(1.05) )
+		gain = gain.times( player.ST.points.plus(1.5).pow(1.05) )
+
+	if( hasUpgrade("S", 32) )
+		gain = gain.times(2)
 
 	return gain
 }
