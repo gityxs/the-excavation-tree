@@ -8,6 +8,20 @@ addLayer("S", {
 	resetTime: new Decimal(0),
 	st: new Decimal(0)
     }},
+    doReset(reset) {
+	let keep = [];
+	if ( hasMilestone("ST", 4) ) keep.push("upgrades")
+	if (layers[reset].row > this.row) layerDataReset("S", keep)
+    },
+    passiveGeneration() {
+	if ( hasUpgrade("W", 24) )
+		if ( hasUpgrade("R", 14) )
+			return new Decimal(0.1)
+		else
+			return new Decimal(0.01)
+	else
+		return new Decimal(0)
+    },
     branches: ["W", "ST", "L"],
     color: "#a86e34",
     requires: new Decimal(10), // Can be a function that takes requirement increases into account
@@ -23,6 +37,7 @@ addLayer("S", {
 	if ( hasUpgrade("S", 31) ) mult = mult.times(upgradeEffect("S", 31))
 	if ( hasUpgrade("L", 11) ) mult = mult.times(upgradeEffect("L", 11))
 	if ( hasMilestone("ST", 3) ) mult = mult.times( player.ST.points.plus(1.5).pow(0.5) )
+	if ( hasUpgrade("TI", 11) ) mult = mult.times(10)
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -199,6 +214,11 @@ addLayer("W", {
     gainExp() { // Calculate the exponent on main currency from bonuses
         return new Decimal(1)
     },
+    doReset(reset) {
+	keep = []
+	if ( hasUpgrade("R", 11) ) keep.push("upgrades")
+	if ( layers[reset].row > this.row ) layerDataReset("W", keep)
+    },
     row: 0, // Row the layer is in on the tree (0 is the first row)
     clickables: {
     	11: {
@@ -214,6 +234,11 @@ addLayer("W", {
 			if ( hasUpgrade("ST", 11) ) gain2 = gain2.plus(2);
 			if ( hasUpgrade("W", 14) ) gain2 = gain2.times(upgradeEffect("W", 14));
 			if ( hasUpgrade("L", 12) ) gain2 = gain2.times(upgradeEffect("L", 12));
+			if ( hasMilestone("ST", 5) ) gain2 = gain2.times(4);
+			if ( hasUpgrade("L", 13) ) gain2 = gain2.times(upgradeEffect("L", 13));
+			if ( hasUpgrade("R", 13) ) gain2 = gain2.times(upgradeEffect("R", 13));
+			if ( hasUpgrade("L", 15) ) gain2 = gain2.times(upgradeEffect("L", 15));
+			if ( hasUpgrade("TI", 11) ) gain2 = gain2.times(10);
 			player.W.points = player.W.points.plus(gain2) 
 		},
 		onHold() { 
@@ -223,6 +248,11 @@ addLayer("W", {
 				if ( hasUpgrade("ST", 11) ) gain2 = gain2.plus(2);
 				if ( hasUpgrade("W", 14) ) gain2 = gain2.times(upgradeEffect("W", 14));
 				if ( hasUpgrade("L", 12) ) gain2 = gain2.times(upgradeEffect("L", 12));
+				if ( hasMilestone("ST", 5) ) gain2 = gain2.times(4);
+				if ( hasUpgrade("L", 13) ) gain2 = gain2.times(upgradeEffect("L", 13));
+				if ( hasUpgrade("R", 13) ) gain2 = gain2.times(upgradeEffect("R", 13));
+				if ( hasUpgrade("L", 15) ) gain2 = gain2.times(upgradeEffect("L", 15));
+				if ( hasUpgrade("TI", 11) ) gain2 = gain2.times(10);
 				player.W.points = player.W.points.plus(gain2) 
 		}
 	    }
@@ -231,13 +261,21 @@ addLayer("W", {
     	11: {
         	cost: new Decimal(1000),
 		title: "Convert",
-        	display() { return "Convert 1000 wood into 1 refined wood" },
+        	display() { 
+			if ( hasUpgrade("L", 22) )
+				return "Convert 1000 wood into 2 refined wood" 
+			else
+				return "Convert 1000 wood into 1 refined wood"
+		},
         	canAfford() { return player.W.points.gte(new Decimal(1000)) && hasUpgrade("W", 21) },
 		unlocked() { return hasUpgrade("W", 21) },
         	buy() {
             		player.W.points = player.W.points.sub(1000)
             		setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
-	    		player.W.refinedwood = player.W.refinedwood.plus(1)
+			if ( hasUpgrade("L", 22) )
+	    			player.W.refinedwood = player.W.refinedwood.plus(2)
+			else
+				player.W.refinedwood = player.W.refinedwood.plus(1)
         	}
 	}
     },
@@ -309,6 +347,28 @@ addLayer("W", {
 		pay() {
 			player.W.points = player.W.points.sub(1000);
 			player.W.refinedwood = player.W.refinedwood.sub(2)
+		}
+	    },
+	    23: {
+		fullDisplay() {  
+			return "<font size=-1.5><b>Dont leaf me...</b></font> <br>Double leaf gain</br> <br>Cost: 10K Wood, 10 refined wood</br>"
+		},
+		canAfford() { return player.W.points.gte(new Decimal(10000)) && player.W.refinedwood.gte(new Decimal(10)) },
+		unlocked() { return hasUpgrade("R", 12) },
+		pay() {
+			player.W.points = player.W.points.sub(10000);
+			player.W.refinedwood = player.W.refinedwood.sub(10)
+		}
+	    },
+	    24: {
+		fullDisplay() {  
+			return "<font size=-1.5><b>Reproducing Sticks</b></font> <br>Passively generate 1% of sticks</br> <br>Cost: 20K Wood, 20 refined wood</br>"
+		},
+		canAfford() { return player.W.points.gte(new Decimal(20000)) && player.W.refinedwood.gte(new Decimal(20)) },
+		unlocked() { return hasUpgrade("W", 23) },
+		pay() {
+			player.W.points = player.W.points.sub(20000);
+			player.W.refinedwood = player.W.refinedwood.sub(20)
 		}
 	    }
     },
@@ -411,14 +471,14 @@ addLayer("T", {
 	    33: {
 		title: "Tin Cans",
 		description: "Unlock the tin layer",
-		cost: new Decimal(10000),
+		cost: new Decimal(500000),
 		unlocked() { return hasUpgrade("T", 22) },
 		style: {
 			transform: "translate(95px, 50px)"
 		}
 	    }
     },
-    layerShown() { return hasUpgrade("S", 22) || hasUpgrade("L", 11) }
+    layerShown() { return hasUpgrade("S", 22) || hasUpgrade("L", 11) || hasUpgrade("TI", 11) }
 }),
 
 addLayer("ACH", {
@@ -505,7 +565,7 @@ addLayer("ACH", {
 		image: "resources/Ach10.png"
     	}
     },
-    layerShown() { return hasUpgrade("S", 22) || hasUpgrade("L", 11) }
+    layerShown() { return hasUpgrade("S", 22) || hasUpgrade("L", 11) | hasUpgrade("TI", 11) }
 }),
 
 addLayer("ST", {
@@ -517,7 +577,7 @@ addLayer("ST", {
 	points: new Decimal(0),
 	total: new Decimal(0)
     }},
-    branches: ["L", "R"],
+    branches: ["L", "R", "TI"],
     color: "#7a7a7a",
     requires: new Decimal(50), // Can be a function that takes requirement increases into account
     resource: "stone", // Name of prestige currency
@@ -558,6 +618,16 @@ addLayer("ST", {
         	effectDescription: "Stone boosts sticks",
         	done() { return player.ST.total.gte(7) },
 		tooltip: "(x+1.5)^0.5"
+    	},
+	4: {
+        	requirementDescription: "9 Stone",
+        	effectDescription: "Stick upgrades don't reset",
+        	done() { return player.ST.total.gte(9) }
+    	},
+	5: {
+        	requirementDescription: "11 Stone",
+        	effectDescription: "x4 wood",
+        	done() { return player.ST.total.gte(11) }
     	}
 
     },
@@ -594,6 +664,12 @@ addLayer("L", {
         unlocked: true,
 	points: new Decimal(0),
     }},
+    doReset(reset) {
+	keep = [];
+	if (reset == "R") keep.push("upgrades");
+	if (reset == "R") layerDataReset("L", keep)
+	if (layers[reset].row > this.row) layerDataReset("L", keep)
+    },
     color: "#32a852",
     requires: new Decimal(5), // Can be a function that takes requirement increases into account
     resource: "leaves", // Name of prestige currency
@@ -603,6 +679,10 @@ addLayer("L", {
     exponent: 0.5, // Prestige currency exponent
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
+	if ( hasUpgrade("W", 23) ) mult = mult.times(2)
+	if ( hasUpgrade("L", 14) ) mult = mult.times(upgradeEffect("L", 14))
+	if ( hasUpgrade("L", 21) ) mult = mult.times(2)
+	if ( hasUpgrade("TI", 11) ) mult = mult.times(2)
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -632,6 +712,48 @@ addLayer("L", {
 		},
 		effectDisplay() { return upgradeEffect("L", 12)+"x" },
 		tooltip: "((x+1.25)^0.5)+0.5"
+	    },
+	    13: {
+		title: "Artificial Wood Growth",
+		description: "Tree Centimeters boost wood",
+		cost: new Decimal(5),
+		effect() { 
+			return player.TR.points.plus(1).log10().pow(0.4).plus(1)
+		},
+		effectDisplay() { return upgradeEffect("L", 13)+"x" },
+		tooltip: "(log(x+1)^0.4)+1"
+	    },
+	    14: {
+		title: "Let's research leaves?",
+		description: "Researchers boost leaves",
+		cost: new Decimal(10),
+		effect() { 
+			return player.R.points.plus(2).pow(0.4)
+		},
+		effectDisplay() { return upgradeEffect("L", 14)+"x" },
+		tooltip: "(x+2)^0.4"
+	    },
+	    15: {
+		title: "Branches",
+		description: "Wood boost itself",
+		cost: new Decimal(15),
+		effect() { 
+			return player.W.points.plus(5).log10().pow(0.2).plus(1)
+		},
+		effectDisplay() { return upgradeEffect("L", 15)+"x" },
+		tooltip: "(log(x+5)^0.5)+1"
+	    },
+	    21: {
+		title: "Autumn",
+		description: "x2 Leaf Gain",
+		cost: new Decimal(20),
+		unlocked() { return hasUpgrade("R", 14) }
+	    },
+	    22: {
+		title: "Re-Refining",
+		description: "x2 Refined Wood",
+		cost: new Decimal(25),
+		unlocked() { return hasUpgrade("L", 21) }
 	    }
     },
     layerShown(){ return hasUpgrade("S", 32) }
@@ -655,11 +777,16 @@ addLayer("R", {
     type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
     exponent: 0.5, // Prestige currency exponent
     automate() {
-	player.R.rps = player.R.rpr.times(player.R.points),
+	gain5 = new Decimal(1)
+	if ( hasUpgrade("R", 12) ) gain5 = gain5.times(2)
+	if ( hasUpgrade("R", 15) ) gain5 = gain5.times(upgradeEffect("R", 15))
+	player.R.rpr = new Decimal(0).plus(gain5)
+	player.R.rps = player.R.rpr.times(player.R.points)
 	player.T.points = player.T.points.plus(player.R.rps)
     },
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
+	if ( hasUpgrade("R", 14) ) mult = mult.times(upgradeEffect("R", 14))
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -671,15 +798,59 @@ addLayer("R", {
     ],
     upgrades: {
 	    11: {
+		title: "Artifical Wood",
+		description: "Wood upgrades don't reset",
+		cost: new Decimal(1),
+		unlocked() { return player.R.points.gte(new Decimal(2)) || hasUpgrade("R", 11) }
+	    },
+	    12: {
 		title: "Re-searching",
-		description: "Double research gain from researchers",
-		cost: new Decimal(5)
+		description: "Double research gain from researchers and unlock more wood upgrades",
+		cost: new Decimal(3),
+		unlocked() { return hasUpgrade("R", 11) }
+	    },
+	    13: {
+		title: "Serious Work",
+		description: "Researchers boost wood",
+		cost: new Decimal(5),
+		unlocked() { return hasUpgrade("R", 12) },
+		effect() { 
+			return player.R.points.plus(1.5).pow(0.45)
+		},
+		effectDisplay() { return upgradeEffect("R", 13)+"x" },
+		tooltip: "(x+1)^0.45"
+	    },
+	    14: {
+		title: "Discover the BIG BANG",
+		description: "Passively gain 10% of sticks, Researchers boost itself and unlock more leaf upgrades",
+		cost: new Decimal(7),
+		unlocked() { return hasUpgrade("R", 13) },
+		effect() { 
+			return player.R.points.plus(2).log10().pow(0.4).plus(1)
+		},
+		effectDisplay() { return upgradeEffect("R", 14)+"x" },
+		tooltip: "((log(x+2))^0.4)+1"
+	    },
+	    15: {
+		fullDisplay() {  
+			return "<font size=-1.5><b>Tree Knowledge</b></font> <br>Boost research per researcher by tree centimeters</br> <br>((log(x+2))^0.4)+1</br> <br>Cost: 20 researchers, 10,000 research</br>"
+		},
+		canAfford() { return player.R.points.gte(new Decimal(20)) && player.T.points.gte(new Decimal(10000)) },
+		unlocked() { return hasUpgrade("R", 14) },
+		pay() {
+			player.R.points = player.R.points.sub(20);
+			player.T.points = player.T.points.sub(10000)
+		},
+		effect() {
+			return player.TR.points.plus(2).log10().pow(0.4).plus(1)
+		},
+		tooltip() { return "Effect: "+format(player.TR.points.plus(2).log10().pow(0.4).plus(1))+"x" }
 	    }
     },
     layerShown(){ return hasMilestone("ST", 1) },
     tabFormat: [
     	"main-display",
-    	["display-text", function() { return "Your researchers are making "+format(player.R.rps)+" research per second, where each researcher makes "+format(player.R.rpr)+" research." }],
+    	["display-text", function() { return "Your researchers are making "+format(player.R.rps)+" research per tick, where each researcher makes "+format(player.R.rpr)+" research." }],
 	"prestige-button",
 	"blank",
     	"upgrades"
@@ -735,7 +906,7 @@ addLayer("TR", {
 	    11: {
 		title: "Faster Growth",
 		description: "Double growth",
-		cost: new Decimal(25),
+		cost: new Decimal(3),
 	    },
 	    12: {
 		title: "Fertilizers",
@@ -746,11 +917,76 @@ addLayer("TR", {
     },
     layerShown() { return hasMilestone("ST", 2) },
     tabFormat: [
-	["display-text", function() { return "Your tree is "+format(player.TR.points)+" centimeters tall, and it is growing "+format(player.TR.sps)+" centimeters per second." }],
+	["display-text", function() { return "Your tree is "+format(player.TR.points)+" centimeters tall, and it is growing "+format(player.TR.sps)+" centimeters per tick." }],
     	["display-image", "resources/Tree.png"],
     	"blank",
 	"buyables",
 	"blank",
+    	"upgrades"
+    ]
+}),
+
+addLayer("TI", {
+    name: "Tin", // This is optional, only used in a few places, If absent it just uses the layer id.
+    symbol: "TI", // This appears on the layer's node. Default is the id with the first letter capitalized
+    position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+    startData() { return {
+        unlocked: true,
+	points: new Decimal(0),
+	tinium: new Decimal(0),
+    }},
+    doReset(reset) {
+	let keep = [];
+	if (layers[reset].row > this.row) layerDataReset("TI", keep)
+    },
+    color: "#dfe3eb",
+    requires: new Decimal(5), // Can be a function that takes requirement increases into account
+    resource: "tin", // Name of prestige currency
+    baseResource: "stone", // Name of resource prestige is based on
+    baseAmount() {return player.ST.points}, // Get the current amount of baseResource
+    type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
+    exponent: 0.5, // Prestige currency exponent
+    gainMult() { // Calculate the multiplier for main currency from bonuses
+        mult = new Decimal(1)
+        return mult
+    },
+    gainExp() { // Calculate the exponent on main currency from bonuses
+        return new Decimal(1)
+    },
+    row: 2, // Row the layer is in on the tree (0 is the first row)
+    hotkeys: [
+        {key: "i", description: "I: Reset for tIn.", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+    ],
+    buyables: {
+    	11: {
+        	cost: new Decimal(100),
+		title: "Tiniumify",
+        	display() { return "Convert 1000 leaves and 100 tin into 1 tinium" },
+        	canAfford() { return player.TI.points.gte(new Decimal(100)) && player.L.points.gte(new Decimal(1000)) },
+		unlocked() { return false },
+        	buy() {
+			player.TI.points = player.TI.points.sub(100)
+            		player.L.points = player.L.points.sub(1000)
+            		setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+	    		player.TI.tinium = player.TI.tinium.plus(1)
+        	}
+	}
+    },
+    upgrades: {
+	    11: {
+		title: "Ore Power",
+		description: "x10 sticks, wood and experience, x2 leaves, and unli access to tech tree and achievements",
+		cost: new Decimal(1)
+	    }
+    },
+    layerShown(){return hasUpgrade("T", 33)},
+    tabFormat: [
+    	"main-display",
+	["display-text", function() { if ( player.TI.tinium.gte(new Decimal(1)) ) return "You have "+format(player.TI.tinium)+" tinium" }],
+	"prestige-button",
+    	"blank",
+    	"buyables",
+    	"blank",
     	"upgrades"
     ]
 })
