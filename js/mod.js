@@ -5,7 +5,7 @@ let modInfo = {
 	pointsName: "Experience",
 	modFiles: ["layers.js", "tree.js"],
 	discordName: "EXC Discord",
-	discordLink: "https://github.com/Acamaeda/The-Modding-Tree",
+	discordLink: "https://discord.gg/9ZjwG5PGTU",
 	initialStartPoints: new Decimal (10), // Used for hard resets and new players
 	offlineLimit: 1,  // In hours
 }
