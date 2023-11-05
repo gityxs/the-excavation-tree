@@ -580,7 +580,7 @@ addLayer("ACH", {
     	},
 	15: {
         	name: "small but big",
-        	done() { return player.TR.points.gte(50) && player.TR.layerShown == true },
+        	done() { return player.TR.points.gte(50) && hasMilestone("ST", 2) },
 		tooltip: "have your tree be 50 centimeters tall",
 		image: "resources/Ach5.png"
     	},
@@ -640,7 +640,7 @@ addLayer("ACH", {
     	},
     33: {
         	name: "batterying",
-        	done() { return player.B.points.gte(1) && player.B.layerShown == true },
+        	done() { return player.B.points.gte(1) && hasUpgrade("TI", 11) },
 		tooltip: "have 1 power or more",
 		image: "resources/Ach15.png"
     	},
