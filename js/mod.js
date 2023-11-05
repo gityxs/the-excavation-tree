@@ -12,14 +12,19 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.0",
-	name: "The Excavation Update",
+	num: "1.1",
+	name: "The Electricitycal-Recovery Update",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
-	<h3>v0.0</h3><br>
-		- Creation of game.<br>
-		- Yes.`
+	<h3>v1.1</h3><br>
+		- Fixed decimal precision<br>
+		- Fixed typos<br>
+        - Added more tin and stone and tech upgrades<br>
+        - Added battery, and recovery layer<br>
+        - Added challenges<br>
+        - Added more themes<br>
+        - Added some custom styling`
 
 let winText = `Congrats, you have dug to the void. Wait for more updates to progress even more.`
 
@@ -63,6 +68,9 @@ function getPointGen() {
 
 	if ( hasUpgrade("TI", 11) ) 
 		gain = gain.times(10)
+		
+	if ( player.B.layerShown == true )
+	    gain = gain.times(player.B.points.plus(15).log10().pow(0.5))
 
 	return gain
 }
@@ -73,12 +81,12 @@ function addedPlayerData() { return {
 
 // Display extra things at the top of the page
 var displayThings = [
-	"Current Endgame: 100M points"
+	"Current Endgame: 5e11 experience"
 ]
 
 // Determines when the game "ends"
 function isEndgame() {
-	return player.points.gte(new Decimal("e8"))
+	return player.points.gte(new Decimal("5e11"))
 }
 
 
