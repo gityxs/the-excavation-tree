@@ -1474,7 +1474,7 @@ addLayer("B", {
 	    13:{
 		title: "Fork and Outlet",
 		description: "Double capacity",
-		cost: new Decimal(800),
+		cost: new Decimal(700),
 		unlocked() { return hasUpgrade("TI", 13) },
 		style: {
 	              "border-radius": "5% / 5%"
@@ -1483,7 +1483,7 @@ addLayer("B", {
 	    14:{
 		title: "Static Electricity",
 		description: "Unlock another buyable and double capacity",
-		cost: new Decimal(2400),
+		cost: new Decimal(2000),
 		unlocked() { return hasUpgrade("TR", 13) },
 		style: {
 	              "border-radius": "5% / 5%"
