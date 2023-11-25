@@ -73,3 +73,9 @@ function achievementEffect(layer, id) {
 function gridEffect(layer, id) {
 	return (gridRun(layer, 'getEffect', player[layer].grid[id], id))
 }
+
+function fixbattery() {
+	setBuyableAmount("B", 11, new Decimal(0))
+	setBuyableAmount("B", 12, new Decimal(0))
+	setBuyableAmount("B", 13, new Decimal(0))
+}

@@ -1,5 +1,5 @@
 // ************ Themes ************
-var themes = ["default", "aqua", "heatwave", "lollipop", "grass"]
+var themes = ["default", "aqua", "heatwave", "lollipop", "grass", "sun", "tangerine", "peach"]
 
 var colors = {
 	default: {
@@ -50,6 +50,36 @@ var colors = {
 		points: "#ffdfdf",
 		locked: "#c4a7b3",
 		background: "#002905",
+		background_tooltip: "rgba(0, 15, 31, 0.75)",
+	},
+	sun: {
+		1: "#fffdcc",
+		2: "#fffdcc",
+		3: "#fffdcc",
+		color: "#faf9bb",
+		points: "#fffadf",
+		locked: "#c4a7b3",
+		background: "#292300",
+		background_tooltip: "rgba(0, 15, 31, 0.75)",
+	},
+	tangerine: {
+		1: "#ffe9cc",
+		2: "#ffe9cc",
+		3: "#ffe9cc",
+		color: "#fadcbb",
+		points: "#fff1df",
+		locked: "#c4a7b3",
+		background: "#291700",
+		background_tooltip: "rgba(0, 15, 31, 0.75)",
+	},
+	peach: {
+		1: "#ffccff",
+		2: "#ffccff",
+		3: "#ffccff",
+		color: "#fabbf6",
+		points: "#ffdffe",
+		locked: "#c4a7b3",
+		background: "#270029",
 		background_tooltip: "rgba(0, 15, 31, 0.75)",
 	},
 }
