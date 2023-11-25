@@ -100,7 +100,7 @@ addLayer("S", {
 	    11: {
 		title: "Practice",
 		description: "Gain 1 experience per second.",
-		cost: new Decimal(1)
+		cost: new Decimal(0)
 	    },
 	    12: {
 		title: "Crafting",
