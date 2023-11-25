@@ -3,7 +3,7 @@ let modInfo = {
 	id: "ExcTreAvaE",
 	author: "tree enjoyer",
 	pointsName: "Experience",
-	modFiles: ["layers.js", "tree.js"],
+	modFiles: ["layers.js", "tree.js", "layerss.js"],
 	discordName: "EXC Discord",
 	discordLink: "https://discord.gg/9ZjwG5PGTU",
 	initialStartPoints: new Decimal (10), // Used for hard resets and new players
@@ -12,11 +12,25 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.1",
-	name: "The Electricitycal-Recovery Update",
+	num: "1.2",
+	name: "The Explosion Update",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
+    <h3>v1.2</h3><br>
+		- Fixed battery upgrades<br>
+		- Fixed some softlocks<br>
+        - Added coal layer<br>
+        - Added magnet layer<br>
+        - Added fire stages<br>
+        - Customized some things<br>
+        - Added antimatter dimensions!?!?<br>
+        - Added tier 2 stick upgrades<br>
+        - Added more tech<br>
+        - Added tons of achievements<br>
+        - Added more themes<br>
+        - Please fix your battery upgrades in the options tab <br>
+        - Added more challenges<br>
 	<h3>v1.1</h3><br>
 		- Fixed decimal precision<br>
 		- Fixed typos<br>
@@ -71,6 +85,28 @@ function getPointGen() {
 		
 	if ( player.B.layerShown == true )
 	    gain = gain.times(player.B.points.plus(15).log10().pow(0.5))
+	
+	gain = gain.times(getBuyableAmount("M", 13).times(0.1).plus(1)) // shop boost
+	
+	if ( hasUpgrade("S", 51) ) 
+		gain = gain.times(2)
+		
+	if( hasUpgrade("S", 52) )
+		gain = gain.times(upgradeEffect("S", 52))
+		
+	if( hasUpgrade("S", 53) )
+		gain = gain.times(upgradeEffect("S", 53))
+		
+	if ( hasUpgrade("R", 23) ) 
+		gain = gain.times(2)
+		
+	if ( hasUpgrade("B", 23) ) 
+		gain = gain.times(2)
+		
+	if ( hasUpgrade("F", 21) ) gain = gain.times(10)
+	
+	if ( inChallenge("B", 12) )
+	    gain = gain.div(100)
 
 	return gain
 }
@@ -81,12 +117,12 @@ function addedPlayerData() { return {
 
 // Display extra things at the top of the page
 var displayThings = [
-	"Current Endgame: 5e11 experience"
+	"Current Endgame: 1 coal"
 ]
 
 // Determines when the game "ends"
 function isEndgame() {
-	return player.points.gte(new Decimal("5e11"))
+	return player.C.points.gte(new Decimal(1))
 }
 
 
@@ -95,7 +131,6 @@ function isEndgame() {
 
 // Style for the background, can be a function
 var backgroundStyle = {
-
 }
 
 // You can change this if you have things that can be messed up by long tick lengths
