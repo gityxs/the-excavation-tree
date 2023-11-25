@@ -2,6 +2,7 @@
 body {
 	color: var(--color);
 	overflow: hidden;
+	background-image: resources/Tree.png;
 	--background: #0f0f0f;
 	--color: #dfdfdf;
 	--points: #ffffff;
@@ -33,6 +34,46 @@ h1, h2, h3, b, input {
 .bought {
 	background-color: #77bf5f;
 	cursor: default;
+}
+
+.R.bought {
+	background-color: #6518a1;
+}
+
+.ST.bought {
+	background-color: #525252;
+}
+
+.S.bought {
+	background-color: #855729;
+}
+
+.W.bought {
+	background-color: #bf7c39;
+}
+
+.TI.bought {
+	background-color: #c7c6c5;
+}
+
+.AD.bought {
+	background-color: #c7c6c5;
+}
+
+.B.bought {
+	background-color: #a39e53;
+}
+
+.M.bought {
+	background-color: #6e0fb8;
+}
+
+.T.bought {
+	background-color: #d104ce;
+}
+
+.F.bought {
+	background-color: #a62c23;
 }
 
 #points {
