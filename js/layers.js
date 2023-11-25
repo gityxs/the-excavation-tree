@@ -1913,7 +1913,7 @@ addLayer("B", {
 	    13:{
 		title: "Fork and Outlet",
 		description: "Double capacity",
-		cost: new Decimal(700),
+		cost: new Decimal(600),
 		unlocked() { return hasUpgrade("TI", 13) },
 		style: {
 	              "border-radius": "5% / 5%"
@@ -1922,7 +1922,7 @@ addLayer("B", {
 	    14:{
 		title: "Static Electricity",
 		description: "Unlock another buyable and double capacity",
-		cost: new Decimal(2000),
+		cost: new Decimal(1250),
 		unlocked() { return hasUpgrade("TR", 13) },
 		style: {
 	              "border-radius": "5% / 5%"
@@ -1931,7 +1931,7 @@ addLayer("B", {
 	    21:{
 		title: "Training",
 		description: "Unlock another challenge and double capacity",
-		cost: new Decimal(3000),
+		cost: new Decimal(2000),
 		unlocked() { return hasUpgrade("B", 14) },
 		style: {
 	              "border-radius": "5% / 5%"
@@ -1940,7 +1940,7 @@ addLayer("B", {
 	    22:{
 		title: "Electrified Sticks",
 		description: "Double stick gain, and double charge gain.",
-		cost: new Decimal(4000),
+		cost: new Decimal(3000),
 		unlocked() { return hasUpgrade("R", 24) },
 		style: {
 	              "border-radius": "5% / 5%"
