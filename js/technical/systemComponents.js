@@ -172,6 +172,8 @@ var systemComponents = {
 				<td><button class="opt" onclick="toggleOpt('forceTooltips'); needsCanvasUpdate = true">Shift-Click to Toggle Tooltips: {{ options.forceTooltips?"ON":"OFF" }}</button></td>
 		    </tr> 
 		    <tr>
+		        <td><button class="opt" onclick="toggleOpt('spaceBg'); needsCanvasUpdate = true">Space Background: {{ options.spaceBg?"ENABLED":"DISABLED" }}</button></td>
+		        <td><button class="opt" onclick="fixfix()">Fix export button and save</button></td>
                 <td><button class="opt" onclick="fixbattery()">Fix Battery Upgrades</button></td>
             </tr>
         </table>`
