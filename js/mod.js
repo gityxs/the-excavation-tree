@@ -3,7 +3,7 @@ let modInfo = {
 	id: "ExcTreAvaE",
 	author: "tree enjoyer",
 	pointsName: "Experience",
-	modFiles: ["layers.js", "tree.js", "layerss.js"],
+	modFiles: ["layers.js", "tree.js", "layerss.js", "space.js", "statica.js", "challe26e.js"],
 	discordName: "EXC Discord",
 	discordLink: "https://discord.gg/9ZjwG5PGTU",
 	initialStartPoints: new Decimal (10), // Used for hard resets and new players
@@ -12,12 +12,25 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.2",
-	name: "The Explosion Update",
+	num: "1.25",
+	name: "The Universal Update Pt.1",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
-    <h3>v1.2</h3><br>
+    <h3>v1.25 The Universal Update Pt.1</h3><br>
+        - Added space background (toggleable on settings)<br>
+        - You can now fix the export button in the settings<br>
+        - Added even more achievements<br>
+        - Added statuses<br>
+        - Added mini tree<br>
+        - Added rocket layer<br>
+        - Added universal map<br>
+        - Added planets<br>
+        - Added seperate trees<br>
+        - Bumped endgame<br>
+        - Added more challenges<br>
+        - Added more milestones<br>
+    <h3>v1.2 The Explosion Update</h3><br>
 		- Fixed battery upgrades<br>
 		- Fixed some softlocks<br>
         - Added coal layer<br>
@@ -104,6 +117,8 @@ function getPointGen() {
 		gain = gain.times(2)
 		
 	if ( hasUpgrade("F", 21) ) gain = gain.times(10)
+	if ( hasUpgrade("ms", 24) ) gain = gain.times(2)
+	gain = gain.times(getBuyableAmount("C", 21).times(2).plus(1)) // coal fried exp
 	
 	if ( inChallenge("B", 12) )
 	    gain = gain.div(100)
@@ -113,16 +128,18 @@ function getPointGen() {
 
 // You can add non-layer related variables that should to into "player" and be saved here, along with default values
 function addedPlayerData() { return {
+	area: "main",
+	formal: "Ori-612al"
 }}
 
 // Display extra things at the top of the page
 var displayThings = [
-	"Current Endgame: 1 coal"
+	"Current Endgame: 'A+' and 'upgrades? it's all yours my friend' achievements"
 ]
 
 // Determines when the game "ends"
 function isEndgame() {
-	return player.C.points.gte(new Decimal(1))
+	return hasAchievement("ACH", 102) && hasAchievement("ACH", 106)
 }
 
 
@@ -130,7 +147,10 @@ function isEndgame() {
 // Less important things beyond this point!
 
 // Style for the background, can be a function
-var backgroundStyle = {
+function backgroundStyle() {
+	if (options.spaceBg) {
+        return "background: linear-gradient(var(--tint), var(--tint)), url(resources/bg.png)"
+    }
 }
 
 // You can change this if you have things that can be messed up by long tick lengths

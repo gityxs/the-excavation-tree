@@ -5,7 +5,6 @@ addLayer("S", {
     startData() { return {
         unlocked: true,
 	points: new Decimal(0),
-	resetTime: new Decimal(0),
 	st: new Decimal(0)
     }},
     nodeStyle: {
@@ -70,6 +69,13 @@ addLayer("S", {
 	if ( hasUpgrade("B", 22) ) mult = mult.times(2)
 	if ( hasUpgrade("F", 11) ) mult = mult.times(10)
 	if(hasMilestone("C", 0)) mult = mult.times(3)
+	mult = mult.times(getBuyableAmount("C", 32).times(2).plus(1))
+	if( player.L.status.eq(1) ) {
+		mult = mult.times(0.5)
+	}
+	if( player.L.status.eq(2) ) {
+		mult = mult.times(2)
+	} // status goes first
 	if ( inChallenge("B", 12) ) mult = mult.div(100) // divide comes first
 	if ( inChallenge("B", 13) ) mult = mult.sqrt() // sqrt comes first
         return mult
@@ -81,18 +87,28 @@ addLayer("S", {
     hotkeys: [
         {key: "s", description: "S: Reset for Sticks.", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
     ],
+    stonestick() {
+    	let mult = new Decimal(1)
+        if( player.L.status.eq(1) ) {
+		    mult = mult.times(0.5)
+	    }
+	    if( player.L.status.eq(2) ) {
+		    mult = mult.times(2)
+	    } // status goes first
+	    return mult
+    },
     buyables: {
     	11: {
         	cost: new Decimal(2500),
 		title: "Merge",
-        	display() { return "Convert 2500 sticks, 1000 wood into 1 stone stick" },
+        	display() { return "Convert 2500 sticks, 1000 wood into "+format(tmp.S.stonestick)+" stone sticks" },
         	canAfford() { return player.S.points.gte(new Decimal(2500)) && player.W.points.gte(new Decimal(1000)) && hasUpgrade("ST", 12) },
 		unlocked() { return hasUpgrade("ST", 12) },
         	buy() {
 			player.S.points = player.S.points.sub(2500)
             		player.W.points = player.W.points.sub(1000)
             		setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
-	    		player.S.st = player.S.st.plus(1)
+	    		player.S.st = player.S.st.plus(tmp.S.stonestick)
         	}
 	}
     },
@@ -318,7 +334,8 @@ addLayer("S", {
 		unlocked() { return hasUpgrade("S", 63) },
 	    },
     },
-    layerShown(){return true},
+    layerShown(){return inArea("main")},
+    isActive(){return tmp.S.layerShown},
     tabFormat: [
     	"main-display",
 	["display-text", function() { if ( hasUpgrade("ST", 12) ) return "You have "+format(player.S.st)+" stone sticks" }],
@@ -367,6 +384,13 @@ addLayer("W", {
 			if ( hasUpgrade("W", 32) ) gain2 = gain2.times(2);
 			if ( hasUpgrade("F", 31) ) gain2 = gain2.times(10);
 			if(hasMilestone("C", 0)) gain2 = gain2.times(3);
+			gain2 = gain2.times(getBuyableAmount("C", 31).times(2).plus(1))
+			if( player.L.status.eq(1) ) {
+		        gain2 = gain2.times(0.5)
+	        }
+	        if( player.L.status.eq(2) ) {
+		        gain2 = gain2.times(2)
+	        } // status goes first
 			if ( inChallenge("B", 12) ) gain2 = gain2.div(100);
 			if ( inChallenge("B", 13) ) gain2 = gain2.sqrt();
 			return gain2
@@ -402,27 +426,33 @@ addLayer("W", {
 		}
 	    }
     },
+    rice() {
+    	let rice = new Decimal(1)
+			if ( hasUpgrade("L", 22) ) rice = rice.times(2)
+			if( player.L.status.eq(1) ) {
+		        rice = rice.times(0.5)
+	        }
+	        if( player.L.status.eq(2) ) {
+		       rice = rice.times(2)
+	        } // status goes first
+	        return rice
+    },
     buyables: {
     	11: {
         	cost: new Decimal(1000),
 		title: "Convert",
-        	display() { 
-			if ( hasUpgrade("L", 22) )
-				return "Convert 1000 wood into 2 refined wood (buys max)" 
-			else
-				return "Convert 1000 wood into 1 refined wood (buys max)"
+        	display() {
+				return "Convert 1000 wood into "+format(tmp.W.rice)+" refined wood (buys max)"
 		},
         	canAfford() { return player.W.points.gte(new Decimal(1000)) && hasUpgrade("W", 21) },
 		unlocked() { return hasUpgrade("W", 21) },
         	buy() {
-			let rice = new Decimal(1)
-			if ( hasUpgrade("L", 22) ) rice = rice.times(2)
 			// doing buy max on my own bcuz it wont work and it will NaN >:(
 			let amount = player.W.points.div(1000).floor()
 			let cost = amount.times(1000)
 			setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(amount))
 			player.W.points = player.W.points.sub(cost)
-			player.W.refinedwood = player.W.refinedwood.plus(amount.times(rice))
+			player.W.refinedwood = player.W.refinedwood.plus(amount.times(tmp.W.rice))
 		}
 	}
     },
@@ -545,8 +575,9 @@ addLayer("W", {
     	if (inChallenge("B", 11))
             return false
         else
-            return hasUpgrade("S", 14)
+            return hasUpgrade("S", 14) && inArea("main")
     },
+    isActive() {return tmp.W.layerShown},
     tabFormat: [
     	"main-display",
 	["display-text", function() { return "You have "+format(player.W.refinedwood)+" refined wood" }],
@@ -672,7 +703,8 @@ addLayer("T", {
 		}
 	    }
     },
-    layerShown() { return hasUpgrade("S", 22) || hasUpgrade("L", 11) || hasUpgrade("TI", 11) || hasMilestone("C", 0) }
+    layerShown() { return (hasUpgrade("S", 22) || hasUpgrade("L", 11) || hasUpgrade("TI", 11) || hasMilestone("C", 0)) && inArea("main") },
+    isActive() {return tmp.T.layerShown}
 }),
 
 addLayer("ACH", {
@@ -950,6 +982,114 @@ addLayer("ACH", {
 		tooltip: "get a coal",
 		image: "resources/Ach42.png"
     	},
+    81: {
+        	name: "mini... skilled",
+        	done() { return player.C.mini.gte(1000) },
+		tooltip: "have 1000 mini experience",
+		image: "resources/Ach43.png"
+    	},
+    82: {
+        	name: "its easy",
+        	done() { return player.mst.points.gte(1) },
+		tooltip: "get 1 mini stone",
+		image: "resources/Ach44.png"
+    	},
+    83: {
+        	name: "please step",
+        	done() { return player.ml.points.gte(1) },
+		tooltip: "get 1 mini leaf",
+		image: "resources/Ach45.png"
+    	},
+    84: {
+        	name: "nano experience nano-nanotubes",
+        	done() { return player.C.mini.gte(1000000) },
+		tooltip: "get 1M mini experience",
+		image: "resources/Ach46.png"
+    	},
+    85: {
+        	name: "aleph / 0.1",
+        	done() { return player.ms.points.gte(100000) },
+		tooltip: "get 100,000 mini sticks",
+		image: "resources/Ach47.png"
+    	},
+    86: {
+        	name: "minimum wage",
+        	done() { return player.mr.points.gte(1) },
+		tooltip: "have 1 mini researcher",
+		image: "resources/Ach48.png"
+    	},
+    91: {
+        	name: "little versions",
+        	done() { return player.C.mp.gte(1) },
+		tooltip: "get 1 mini point",
+		image: "resources/Ach49.png"
+    	},
+    92: {
+        	name: "reepeeteetive",
+        	done() { return player.C.mp.gte(2) },
+		tooltip: "get 2 mini points",
+		image: "resources/Ach50.png"
+    	},
+    93: {
+        	name: "expand",
+        	done() { return getBuyableAmount("C", 41).gte(1) },
+		tooltip: "buy the x-pansion upgrade",
+		image: "resources/Ach51.png"
+    	},
+    94: {
+        	name: "maxed",
+        	done() { return getBuyableAmount("C", 11).gte(5) && getBuyableAmount("C", 21).gte(5) && getBuyableAmount("C", 22).gte(5) && getBuyableAmount("C", 31).gte(5) && getBuyableAmount("C", 32).gte(5) && getBuyableAmount("C", 33).gte(5) && getBuyableAmount("C", 34).gte(1) && getBuyableAmount("C", 41).gte(1)},
+		tooltip: "max every upgrade from the mini upgrade tree up until row 4",
+		image: "resources/Ach52.png"
+    	},
+    95: {
+        	name: "man behind everything",
+        	done() { return hasUpgrade("L", 23)},
+		tooltip: "unlock statuses",
+		image: "resources/Ach53.png"
+    	},
+    96: {
+        	name: "another world",
+        	done() { return !inArea("main")},
+		tooltip: "exit the planet",
+		image: "resources/Ach54.png"
+    	},
+    101: {
+        	name: "isitreal?",
+        	done() { return player.ES2.points.gte(1000)},
+		tooltip: "get 1000 ethereal sticks",
+		image: "resources/Ach55.png"
+    	},
+    102: {
+        	name: "upgrades? it's all yours, my friend.",
+        	done() { return getBuyableAmount("ES2", 11).gte(4)},
+		    tooltip: "max out content",
+		    image: "resources/Ach56.png"
+    	},
+    103: {
+        	name: "it's very convenient",
+        	done() { return maxedChallenge("CE3", 11)},
+		    tooltip: "max inconvenient challenge",
+		    image: "resources/Ach57.png"
+    	},
+    104: {
+        	name: "the opposite of what?",
+        	done() { return maxedChallenge("CE3", 12)},
+		    tooltip: "max the opposite challenge",
+		    image: "resources/Ach58.png"
+    	},
+    105: {
+        	name: "at the speed of exp",
+        	done() { return getBuyableAmount("CE3", 11).gte(1)},
+		    tooltip: "buy the speedrun buyable",
+		    image: "resources/Ach59.png"
+    	},
+    106: {
+        	name: "A+",
+        	done() { return hasChallenge("CE3", 21)},
+		    tooltip: "complete the first test",
+		    image: "resources/Ach60.png"
+    	},
     },
     layerShown() { return hasUpgrade("S", 22) || hasUpgrade("L", 11) || hasUpgrade("TI", 11) || hasMilestone("C", 0) }
 }),
@@ -1054,7 +1194,8 @@ addLayer("ST", {
 		unlocked() { return hasUpgrade("ST", 13) }
 	    }
     },
-    layerShown(){ return hasUpgrade("T", 22) },
+    layerShown(){ return hasUpgrade("T", 22) && inArea("main") },
+    isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
     	"main-display",
     	["display-text", function() { return "You have made a total of "+format(player.ST.total)+" stone" }],
@@ -1073,8 +1214,13 @@ addLayer("L", {
     startData() { return {
         unlocked() { return hasUpgrade("S", 32) },
 	points: new Decimal(0),
+	energy: new Decimal(0),
+	heat: new Decimal(0),
+	status: new Decimal(0), // status id's [ 0 = normal] [1 is slowed] [2 is overclock]
+	a: new Decimal(0)
     }},
     doReset(reset) {
+    player.L.status = new Decimal(0)
 	keep = [];
 	if (reset == "R") keep.push("upgrades");
 	if (reset == "R") layerDataReset("L", keep)
@@ -1097,6 +1243,12 @@ addLayer("L", {
 	if ( hasUpgrade("L", 21) ) mult = mult.times(2)
 	if ( hasUpgrade("TI", 11) ) mult = mult.times(2)
 	if ( hasUpgrade("TI", 12) ) mult = mult.times(upgradeEffect("TI", 12))
+	if( player.L.status.eq(1) ) {
+		        mult = mult.times(0.5)
+	        }
+	        if( player.L.status.eq(2) ) {
+		        mult = mult.times(2)
+	        } // status goes first
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -1168,16 +1320,146 @@ addLayer("L", {
 		description: "x2 Refined Wood",
 		cost: new Decimal(25),
 		unlocked() { return hasUpgrade("L", 21) }
+	    },
+	    23: {
+		title: "Full Control",
+		description: "Unlock Statuses",
+		cost: new Decimal(10000000),
+		unlocked() { return getBuyableAmount("C", 41).gte(1) }
+	    },
+	    24: {
+		title: "Supporting Leaves",
+		description: "Unlock more mini tree upgrades",
+		cost: new Decimal(50000000),
+		unlocked() { return hasUpgrade("L", 23) }
 	    }
     },
-    layerShown(){ return hasUpgrade("S", 32) },
+    buyables: {
+    	11: {
+        	cost: new Decimal(0),
+		title: "Normal Status",
+        	display() { return "Change status to Normal. <br> Normal Effects: x1 All resources </br>" },
+		unlocked() { return hasUpgrade("L", 23) },
+        	canAfford() { return player.L.status.neq( new Decimal(0) ) && player.L.a.eq(0) },
+        	buy() {
+            		player.L.status = new Decimal(0)
+        	}
+	},
+	12: {
+        	cost: new Decimal(0),
+		title: "Slowed Status",
+        	display() { return "Change status to Slowed. <br> Slowed Effects: x0.5 All resources, +6% energy/s, -1 heat/s.</br>" },
+		unlocked() { return hasUpgrade("L", 23) },
+        	canAfford() { return player.L.status.neq( new Decimal(1) ) && player.L.a.eq(0)  },
+        	buy() {
+            		player.L.status = new Decimal(1)
+        	}
+	},
+	13: {
+        	cost: new Decimal(0),
+		title: "Overclocked Status",
+        	display() { return "Change status to Overclocked. <br> Overclocked Effects: x1.5 All resources, -3% energy/s, +1 heat/s.</br>" },
+		unlocked() { return hasUpgrade("L", 23) },
+        	canAfford() { return player.L.status.neq( new Decimal(2) ) && player.L.a.eq(0) && player.L.energy.gt(0) },
+        	buy() {
+            		player.L.status = new Decimal(2)
+        	}
+	},
+	},
+	bars: {
+         energyBar: {
+             direction: RIGHT,
+             width: 500,
+             height: 50,
+             progress() { return player.L.energy.div(100) },
+             fillStyle: {
+             	"background-color": "#a8a632"
+             },
+             borderStyle: {
+             	"border-color": "#66651e",
+                 "border": "10px solid"
+             }
+         },
+         heatBar: {
+             direction: RIGHT,
+             width: 500,
+             height: 50,
+             progress() { return player.L.heat.div(100) },
+             fillStyle: {
+             	"background-color": "#b8170b"
+             },
+             borderStyle: {
+             	"border-color": "#75150e",
+                 "border": "10px solid"
+             }
+         }
+    },
+    infoboxes: {
+        note: {
+            title: "Note",
+            body() { return "All resources means every resource EXCEPT fire layer and the currencies inside it, magnet layer and the currencies inside it, all layers unlocked via tech tree, and the currencies inside them, the side layers, battery layer, and the Mini tree. <br> If your heat is maximized, it will set status to slowed UNTIL it goes into 0. </br>" },
+        }
+    },
+    microtabs: {
+        stuff: {
+            Upgrades: {
+                content: [
+                    "upgrades"
+                ]
+            },
+            Statuses: {
+                content: [
+                    ["infobox", "note"],
+                    "blank",
+                    ["row", [ ["bar", "energyBar"], "blank", ["display-text", function() { return "You have "+format(player.L.energy)+" energy." }] ] ],
+                    "blank",
+                    ["row", [ ["bar", "heatBar"], "blank", ["display-text", function() { return "You have "+format(player.L.heat)+" heat." }] ] ],
+                    "blank",
+                    ["display-text", function() {
+                    	if(player.L.status.eq(0)) return "Current Status: Normal"
+                        if(player.L.status.eq(1)) return "Current Status: Slowed"
+                        if(player.L.status.eq(2)) return "Current Status: Overclocked"
+                    }],
+                    "blank",
+                    "buyables"
+                ],
+                unlocked() { return hasUpgrade("L", 23) }
+            }
+        }
+    },
+    update(diff) {
+    	if (player.L.status.eq(1) || player.L.a.eq(1) ) {
+    	    if(player.L.a.neq(1)) {
+                if (player.L.energy.lt(100) )player.L.energy = player.L.energy.plus(new Decimal(0.2))
+                if (player.L.heat.gt(0) )player.L.heat = player.L.heat.sub(new Decimal(0.03))
+            }
+            if(player.L.a.eq(1)) {
+            	player.L.status = new Decimal(1)
+                if (player.L.energy.lt(100) )player.L.energy = player.L.energy.plus(new Decimal(0.2))
+                if (player.L.heat.gt(0) )player.L.heat = player.L.heat.sub(new Decimal(0.03))
+                if (player.L.heat.lte(0))player.L.a = new Decimal(0)
+            }
+        }
+        
+        if (player.L.status.eq(2)) {
+        	if (player.L.energy.lte(0)) player.L.status = new Decimal(0)
+            if (player.L.energy.gt(0) )player.L.energy = player.L.energy.sub(new Decimal(0.1))
+            if (player.L.heat.lt(100) )player.L.heat = player.L.heat.plus(new Decimal(0.03))
+        }
+        
+        if (player.L.heat.gte(100)) {
+        	player.L.status = new Decimal(1)
+            player.L.a = new Decimal(1)
+        }
+    },
+    layerShown(){ return hasUpgrade("S", 32) && inArea("main")},
+    isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
     	"main-display",
          "resource-display",
 	    ["display-text", function() { return "Your leaves has a boost of ×<em>"+format(tmp[this.layer].gainMult)+"</em>"}, { "color": "#32a852", "font-size": "16px"}],
     	"prestige-button",
-        "blank",
-    	"upgrades"
+        ["microtabs", "stuff"]
     ]
 }),
 
@@ -1213,6 +1495,12 @@ addLayer("R", {
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
 	if ( hasUpgrade("R", 14) ) mult = mult.times(upgradeEffect("R", 14))
+	if( player.L.status.eq(1) ) {
+		        mult = mult.times(0.5)
+	        }
+	        if( player.L.status.eq(2) ) {
+		        mult = mult.times(2)
+	        } // status goes first
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -1303,7 +1591,8 @@ addLayer("R", {
 		currencyLayer: "M",
 	    },
     },
-    layerShown(){ return hasMilestone("ST", 1) },
+    layerShown(){ return hasMilestone("ST", 1) && inArea("main")},
+    isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
     	"main-display",
         "resource-display",
@@ -1404,7 +1693,8 @@ addLayer("TR", {
 		unlocked() { return hasUpgrade("TR", 13) }
 	    }
     },
-    layerShown() { return hasMilestone("ST", 2) },
+    layerShown() { return hasMilestone("ST", 2) && inArea("main")},
+    isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
 	["display-text", function() { return "Your tree is "+format(player.TR.points)+" centimeters tall, and it is growing "+format(player.TR.sps)+" centimeters per tick." }],
     	["display-image", "resources/Tree.png"],
@@ -1489,7 +1779,8 @@ addLayer("TI", {
 		unlocked() { return hasChallenge("B", 11) }
 	    }
     },
-    layerShown(){return hasUpgrade("T", 33)},
+    layerShown(){return hasUpgrade("T", 33) && inArea("main")},
+    isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
     	"main-display",
 	["display-text", function() { if ( player.TI.tinium.gte(new Decimal(1)) ) return "You have "+format(player.TI.tinium)+" tinium" }],
@@ -1505,7 +1796,7 @@ addLayer("RE", {
     name: "Recovery", // This is optional, only used in a few places, If absent it just uses the layer id.
     symbol: "RE", // This appears on the layer's node. Default is the id with the first letter capitalized
     startData() { return {
-        unlocke() { return hasUpgrade("TI", 12) && !inChallenge("B", 12) && !inChallenge("B", 13) },
+        unlocked() { return hasUpgrade("TI", 12) && !inChallenge("B", 12) && !inChallenge("B", 13) },
 	points: new Decimal(1),
     }},
     color: "#ededed",
@@ -1682,7 +1973,8 @@ addLayer("RE", {
             unlocked() {return hasMilestone("C", 0)}
 	},
     },
-    layerShown() { return hasUpgrade("TI", 12) || hasMilestone("C", 0) && !inChallenge("B", 12) && !inChallenge("B", 13) },
+    layerShown() { return (hasUpgrade("TI", 12) || hasMilestone("C", 0) && !inChallenge("B", 12) && !inChallenge("B", 13)) && inArea("main") },
+    isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
 	["display-text", function() { return "Welcome to the Recovery Layer, in here you will get some recovery buyables. THEY WILL NOT DECREASE!"}],
     	"blank",
@@ -1957,7 +2249,8 @@ addLayer("B", {
 	    }
     },
     tooltip() { return format(player[this.layer].points)+"/"+format(player[this.layer].cap)+" power" },
-    layerShown() { return hasUpgrade("TI", 12) },
+    layerShown() { return hasUpgrade("TI", 12) && inArea("main")},
+    isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
 	["display-text", function() { return "Your battery is storing "+format(player[this.layer].points)+" power, and is getting charged "+format(player.B.speed)+" per tick, and has a maximum of "+format(player[this.layer].cap)+" power, which boosts experience gain by ×"+format(player.B.points.plus(15).log10().pow(0.5))}],
     	"blank",
@@ -1978,7 +2271,7 @@ addLayer("M", {
     startData() { return {
         unlocked(){return hasChallenge("B", 12) },
 	points: new Decimal(0),
-	resetTime: new Decimal(0),
+	
 	cloth: new Decimal(0),
 	plastic: new Decimal(0),
 	box: new Decimal(0),
@@ -2116,7 +2409,7 @@ addLayer("M", {
 		        title: "Sell All",
             	display() { 
             	    let lol = player.M.bottle.plus(player.M.spoon.times(2).plus(player.M.box.times(4).plus(player.M.plastic.times(8).plus(player.M.cloth.times(16)))))
-                    if(hasUpgrade("M", 12)) lol = lol.times(upgradeEffect("M", 12)).plus(1)
+                    if(hasUpgrade("M", 12)) lol = lol.times(upgradeEffect("M", 12))
                     if(hasMilestone("C", 0)) lol = lol.times(3)
                     return "Sell your objects which gives you "+format(lol)+" cash."},
             	canAfford() { return true },
@@ -2227,7 +2520,8 @@ addLayer("M", {
 		unlocked() {return hasUpgrade(this.layer, 13)}
 	    }
     },
-    layerShown(){return hasChallenge("B", 12) },
+    layerShown(){return hasChallenge("B", 12) && inArea("main")},
+    isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
     	"main-display",
         "resource-display",
@@ -2261,7 +2555,7 @@ addLayer("F", {
                     ["display-text", function() {
                     	return "Sacrifice your tin for a fire point."
                     }],
-                    ["display-text", function() { return "You have "+player.F.fp+" fire points" }, {"color": "red"} ],
+                    ["display-text", function() { return "You have <span style='text-shadow: 0px 0px 10px red'>"+player.F.fp+"</span> fire points" }, {"color": "red"} ],
                     "blank",
                     ["buyable", 11],
                     "blank",
@@ -2374,9 +2668,10 @@ addLayer("F", {
     	}
     },
     resetDescription: "Evolve for ",
-    layerShown(){ return hasChallenge("B", 13) },
+    layerShown(){ return hasChallenge("B", 13) && inArea("main")},
+    isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
-    	["display-text", function() { return "You are on Fire Stage <em>"+player.F.points+"</em>"}, { "color": "red", "font-size": "32px"}],
+    	["display-text", function() { return "You are on Fire Stage <em style='text-shadow: 0px 0px 10px red'>"+player.F.points+"</em>"}, { "color": "red", "font-size": "32px"}],
     	"resource-display",
 	    "prestige-button",
 	    "blank",
@@ -2397,7 +2692,6 @@ addLayer("AD", {
         unlocked() { return hasUpgrade("S", 43) },
 	    points: new Decimal(0),
 	    best: new Decimal(0),
-	    resetTime: new Decimal(0),
 	    tick: new Decimal(1),
 	    one: new Decimal(0),
 	    onem: new Decimal(1),
@@ -2575,7 +2869,8 @@ addLayer("AD", {
 	},
     },
     row: "side", // Row the layer is in on the tree (0 is the first row)
-    layerShown(){ return hasUpgrade("S", 43) },
+    layerShown(){ return hasUpgrade("S", 43) && inArea("main")},
+    isActive(){return tmp[this.layer].layerShown},
     microtabs: {
         stuff: {
             Dimensions: {
@@ -2662,7 +2957,7 @@ addLayer("AD", {
 }),
 
 setInterval(function () { // news ticker
-                dice = Math.floor( Math.random() * 76 )
+                dice = Math.floor( Math.random() * 101 )
                 if ( dice == 0 )
                     player.AD.news = "Why am i here..."
                 if ( dice == 1 )
@@ -2788,7 +3083,7 @@ setInterval(function () { // news ticker
                 if ( dice == 61 )
                     player.AD.news = "Wheres Wally?"
                 if ( dice == 62 )
-                    player.AD.news = "Roman Tower"
+                    player.AD.news = "Raman Tawer"
                 if ( dice == 63 )
                     player.AD.news = "Sheesh bro, you played this for "+formatTime(player.timePlayed)+"!?!?"
                 if ( dice == 64 )
@@ -2815,4 +3110,54 @@ setInterval(function () { // news ticker
                     player.AD.news = "Krusty Krab, no health inspectors has come in. Call now."
                 if ( dice == 75 )
                     player.AD.news = "Simon says... laugh at the news ticker after this one."
+                if ( dice == 76 )
+                    player.AD.news = "Breaking News: Sticks have been spotted ALOT lately. It was spotted at canals, toilets. And beds!?!?"
+                if ( dice == 77 )
+                    player.AD.news = "Breaking News: Deforestation is at an all-time high. Detectives say that the suspect includes you."
+                if ( dice == 78 )
+                    player.AD.news = "Breaking News: The earth's stone has been quirking lately. Some say it's the work of... reseting?"
+                if ( dice == 79 )
+                    player.AD.news = "Breaking News: Leaf production from trees is at an all-time world record peak high. These trees are called; The Excavation Trees"
+                if ( dice == 80 )
+                    player.AD.news = "Breaking News: Researchers have been protesting of their minimum-wage salary. Researchers are quitting at a very alarming rate."
+                if ( dice == 81 )
+                    player.AD.news = "Bnuy was here"
+                if ( dice == 82 )
+                    player.AD.news = "This new virus called Vorona, has been infecting trees lately."
+                if ( dice == 83 )
+                    player.AD.news = "Breaking News: Local man collecting lots of fame from planting trees."
+                if ( dice == 84 )
+                    player.AD.news = "Breaking News: Local rainforest spotted with familiar trees from other rainforests. Is it a coincidence!?!?"
+                if ( dice == 85 )
+                    player.AD.news = "Breaking News: Market crashed after alot of tons of tin started to circulate around the world"
+                if ( dice == 86 )
+                    player.AD.news = "Breaking News: National Man electrocuted with "+format(player.B.points)+" watts of electricity."
+                if ( dice == 87 )
+                    player.AD.news = "Breaking News: Local man finds gold after using a magnet on a tree."
+                if ( dice == 88 )
+                    player.AD.news = "Breaking News: Local woman invents a way to scale how severe fires are, called stages."
+                if ( dice == 89 )
+                    player.AD.news = "Breaking News: Miner Comp © finds a cool ton of coal to cook on."
+                if ( dice == 90 )
+                    player.AD.news = "Breaking News: Local boy manages to research all the internet, gaining lots of tech."
+                if ( dice == 91 )
+                    player.AD.news = "Breaking News: National Tree spotted, with a whopping length of about 2718281828459045 centimeters."
+                if ( dice == 92 )
+                    player.AD.news = "Breaking News: Local girl transforms matter into antimatter using the so called Dimensions."
+                if ( dice == 93 )
+                    player.AD.news = "Raman Tawer: DLC"
+                if ( dice == 94 )
+                    player.AD.news = "Croak or Ribbit?"
+                if ( dice == 95 )
+                    player.AD.news = "Breaking News: Supercomputer built by Mlon Eusk reaches 1 Petabytes of storage. He said that the secret was... Trees."
+                if ( dice == 96 )
+                    player.AD.news = "Breaking News: Local man claims to have reached all the so-called Milestones, claiming that he beat the fictional Tree."
+                if ( dice == 97 )
+                    player.AD.news = "Breaking News: : sweN gnikaerB"
+                if ( dice == 98 )
+                    player.AD.news = "Real annoying man. Reaaal annoyiinngg maaannn.."
+                if ( dice == 99 )
+                    player.AD.news = "We couldnt afford 1 more news ticker, sorry for the inconvenience."
+                if ( dice == 100 )
+                    player.AD.news = "ITS LESS THAN 101!!!!!!"
 }, 5000)
