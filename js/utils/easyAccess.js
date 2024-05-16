@@ -79,3 +79,21 @@ function fixbattery() {
 	setBuyableAmount("B", 12, new Decimal(0))
 	setBuyableAmount("B", 13, new Decimal(0))
 }
+
+function fixfix() {
+	player.S.resetTime = 0
+	player.M.resetTime = 0
+	player.AD.resetTime = 0
+}
+
+function inArea(area) {
+	if (player.area == area) {
+		return true
+	} else {
+		return false
+	}
+}
+
+function upgradeLength(layer) {
+	return player[layer].upgrades.length
+}

@@ -11,6 +11,7 @@ var colors = {
 		locked: "#bf8f8f",
 		background: "#0f0f0f",
 		background_tooltip: "rgba(0, 0, 0, 0.75)",
+		tint: "#ffffff00",
 	},
 	aqua: {
 		1: "#bfdfff",
@@ -21,6 +22,7 @@ var colors = {
 		locked: "#c4a7b3",
 		background: "#001f3f",
 		background_tooltip: "rgba(0, 15, 31, 0.75)",
+		tint: "#0080ff80",
 	},
 	heatwave: {
 		1: "#f5c1c1",
@@ -31,6 +33,7 @@ var colors = {
 		locked: "#c4a7b3",
 		background: "#3f0000",
 		background_tooltip: "rgba(0, 15, 31, 0.75)",
+		tint: "#ff757580",
 	},
 	lollipop: {
 		1: "#ffffff",
@@ -41,6 +44,7 @@ var colors = {
 		locked: "#c4a7b3",
 		background: "#7d0000",
 		background_tooltip: "rgba(0, 15, 31, 0.75)",
+		tint: "#ff000080",
 	},
 	grass: {
 		1: "#ccffce",
@@ -51,6 +55,7 @@ var colors = {
 		locked: "#c4a7b3",
 		background: "#002905",
 		background_tooltip: "rgba(0, 15, 31, 0.75)",
+		tint: "#65ff5780",
 	},
 	sun: {
 		1: "#fffdcc",
@@ -61,6 +66,7 @@ var colors = {
 		locked: "#c4a7b3",
 		background: "#292300",
 		background_tooltip: "rgba(0, 15, 31, 0.75)",
+		tint: "#fffa7880",
 	},
 	tangerine: {
 		1: "#ffe9cc",
@@ -71,6 +77,7 @@ var colors = {
 		locked: "#c4a7b3",
 		background: "#291700",
 		background_tooltip: "rgba(0, 15, 31, 0.75)",
+		tint: "#ffb57880",
 	},
 	peach: {
 		1: "#ffccff",
@@ -81,6 +88,7 @@ var colors = {
 		locked: "#c4a7b3",
 		background: "#270029",
 		background_tooltip: "rgba(0, 15, 31, 0.75)",
+		tint: "#ff78ef80",
 	},
 }
 function changeTheme() {
@@ -91,6 +99,7 @@ function changeTheme() {
 	document.body.style.setProperty('--color', colors_theme["color"]);
 	document.body.style.setProperty('--points', colors_theme["points"]);
 	document.body.style.setProperty("--locked", colors_theme["locked"]);
+	document.body.style.setProperty("--tint", colors_theme["tint"]);
 }
 function getThemeName() {
 	return options.theme? options.theme : "default";
