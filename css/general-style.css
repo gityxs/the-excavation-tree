@@ -2,7 +2,6 @@
 body {
 	color: var(--color);
 	overflow: hidden;
-	background-image: resources/Tree.png;
 	--background: #0f0f0f;
 	--color: #dfdfdf;
 	--points: #ffffff;

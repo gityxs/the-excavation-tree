@@ -8,6 +8,16 @@
 	border-color: rgba(0, 0, 0, 0.125);
 }
 
+.mti.reset {
+	height: 120px;
+	width: 180px;
+	border-radius: 0%;
+	border: 4px solid;
+	border-color: rgba(0, 0, 0, 0.125);
+	box-shadow: inset 0px 0px 10px #000000;
+	margin: 4px;
+}
+
 .tabButton {
 	background-color: transparent;
 	color: var(--color);
