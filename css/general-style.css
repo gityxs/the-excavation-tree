@@ -75,6 +75,10 @@ h1, h2, h3, b, input {
 	background-color: #a62c23;
 }
 
+.CO.bought {
+	background-color: #5e5846;
+}
+
 #points {
 	color: var(--points);
 	text-shadow: 0 0 10px var(--points);
