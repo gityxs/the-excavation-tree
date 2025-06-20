@@ -320,3 +320,59 @@ window.onbeforeunload = () => {
         save();
     }
 };
+// CUSTOM FILE EXPORTING + IMPORTS
+//Download a file
+function download(filename, text){
+	let element = document.createElement('a')
+	document.body.appendChild(element)
+	element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
+	element.setAttribute('download', filename)
+	element.click()
+	document.body.removeChild(element)
+}
+//Save to file
+function exportSaveFile() {
+	//if (NaNalert) return
+	let str = btoa(JSON.stringify(player));
+	const d = new Date();
+	download("ExcavationTree-"+d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(), str);
+}
+//Import file
+function importSaveFile() {
+	const input = document.createElement('input');
+	document.body.appendChild(input)
+	input.type = 'file';
+
+	input.onchange = e => { 
+
+  	 // getting a hold of the file reference
+ 	  var file = e.target.files[0]; 
+
+	   // setting up the reader
+	   var reader = new FileReader();
+  	 reader.readAsText(file,'UTF-8');
+
+	   // here we tell the reader what to do when it's done reading...
+	   reader.onload = readerEvent => {
+			let imported = readerEvent.target.result; // this is the content!
+			try {
+				tempPlr = Object.assign(getStartPlayer(), JSON.parse(atob(imported)));
+				if (tempPlr.versionType != modInfo.id && !forced && !confirm("This save appears to be for a different mod! Are you sure you want to import?")) // Wrong save (use "Forced" to force it to accept.)
+					return;
+				player = tempPlr;
+				player.versionType = modInfo.id;
+				fixSave();
+				versionCheck();
+				NaNcheck(save)
+				save();
+				window.location.reload();
+			} catch (e) {
+				return;
+			}
+ 	  }
+
+	}
+
+	input.click();
+	document.body.removeChild(input)
+}

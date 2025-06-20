@@ -15,6 +15,7 @@ function getStartOptions() {
 		oldStyle: false,
 		tooltipForcing: true,
 		spaceBg: true,
+		anims: true
 	}
 }
 
