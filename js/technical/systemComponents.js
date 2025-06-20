@@ -158,7 +158,7 @@ var systemComponents = {
             </tr>
             <tr>
                 <td><button class="opt" onclick="exportSave()">Export to clipboard</button></td>
-                <td><button class="opt" onclick="importSave()">Import</button></td>
+                <td><button class="opt" onclick="importSave()">Import clipboard</button></td>
                 <td><button class="opt" onclick="toggleOpt('offlineProd')">Offline Prod: {{ options.offlineProd?"ON":"OFF" }}</button></td>
             </tr>
             <tr>
@@ -174,7 +174,11 @@ var systemComponents = {
 		    <tr>
 		        <td><button class="opt" onclick="toggleOpt('spaceBg'); needsCanvasUpdate = true">Space Background: {{ options.spaceBg?"ENABLED":"DISABLED" }}</button></td>
 		        <td><button class="opt" onclick="fixfix()">Fix export button and save</button></td>
-                <td><button class="opt" onclick="fixbattery()">Fix Battery Upgrades</button></td>
+                <td><button class="opt" onclick="toggleOpt('anims'); needsCanvasUpdate = true">Animations: {{ options.anims?"ON":"OFF" }}</button></td>
+            </tr>
+            <tr>
+            	<td><button class="opt" onclick="exportSaveFile()">Export to file</button></td>
+                <td><button class="opt" onclick="importSaveFile()">Import file</button></td>
             </tr>
         </table>`
     },
