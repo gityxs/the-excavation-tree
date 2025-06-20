@@ -30,7 +30,11 @@ addLayer("C", { // row 4 -> row 6
     },
     row: 3, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
-        {key: "c", description: "C: Reset for Coal.", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        {
+            key: "c", // What the hotkey button is. Use uppercase if it's combined with shift, or "ctrl+x" for holding down ctrl.
+            description: "c: reset your fire stages for coal", // The description of the hotkey that is displayed in the game's How To Play tab
+            onPress() { if (player.C.unlocked) if (canReset(this.layer)) doReset("C") },
+        }
     ],
     milestones: {
     	0: {
@@ -38,7 +42,12 @@ addLayer("C", { // row 4 -> row 6
         	effectDescription: "Unlock more recoveries, x3 cash, x3 charge gain, x3 battery capacity, x3 wood, x3 sticks",
         	done() { return player.C.total.gte(1) },
     	},
-
+    	1: {
+        	requirementDescription: "2 Total Coal",
+        	effectDescription: "x10 exp, sticks, wood, leaves, researchers, 5x battery charge, new fire stage milestones",
+        	done() { return player.C.total.gte(2)&&hasUpgrade("CO", 21) },
+        	unlocked() { return hasUpgrade("CO", 21) }
+    	},
     },
     buyables: {
     	11: {
@@ -280,19 +289,33 @@ addLayer("C", { // row 4 -> row 6
     },
     layerShown(){ return hasUpgrade("T", 42) && inArea("main")},
     isActive(){return tmp[this.layer].layerShown},
+    fixsomethings() {
+    	player.ms.prevTab = "C"
+        player.mw.prevTab = "C"
+        player.mst.prevTab = "C"
+        player.ml.prevTab = "C"
+        player.mr.prevTab = "C"
+        player.mti.prevTab = "C"
+    },
     tabFormat: [
-    	"main-display",
+    	["row", [
+    		"main-display",
+    		["display-image", "resources/coalicon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "10px"}]
+    	]],
     	"resource-display",
 	    "prestige-button",
     	"blank",
     	"milestones",
         "blank",
-        ["display-text", function() { return "You have <h1 style='text-shadow: 0px 0px 10px #ffffff'>"+format(player.C.mini)+"</h1> mini experience" } ],
+	    ["display-text", function() { return "You have <h1 style='text-shadow: 0px 0px 10px #ffffff'>"+format(player.C.mini)+"</h1> mini experience" } ],
         ["display-text", function() { return "("+format(tmp.C.make)+"/sec)" } ],
         ["display-text", "Current Endgame: 1 mini tin" ],
         ["tree", [ ["ms"], ["mw", "blank"], ["mst"], ["blank", "ml"], ["mr"], ["mti"] ] ],
         "blank",
-        ["display-text", function() { return "You have "+format(player.C.mp)+" mini points." } ],
+        ["row", [
+      	  ["display-text", function() { return "You have "+format(player.C.mp)+" mini points." } ],
+      	  ["display-image", "resources/minipointicon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "0px"}]
+    	]],
         ["row", [ ["buyable", 11] ] ],
         "blank",
         ["row", [ ["buyable", 21], "blank", ["buyable", 22] ] ],
@@ -302,8 +325,331 @@ addLayer("C", { // row 4 -> row 6
         ["buyable", 41],
         "blank",
         ["row", [ ["buyable", 51], "blank", ["buyable", 52] ] ]
-    ]
+    ],
+    branches: ["CO"],
+    roundUpCost: true
 }),
+
+addLayer("CO", { // Copper
+    name: "Copper",
+    symbol: "CO",
+    startData() { return {                  // startData is a function that returns default data for a layer. 
+        unlocked() {return hasUpgrade("T", 44)},                   // You can add more variables here to add them to your layer.
+        points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
+        redcopper: new Decimal(0),
+        greencopper: new Decimal(0),
+        bluecopper: new Decimal(0)
+    }},
+    color: "#b59e77",                       // The color for this layer, which affects many elements.
+    resource: "copper",            // The name of this layer's main prestige resource.
+    row: 3,                                 // The row this layer is on (0 is the first row).
+    baseResource: "experience",                 // The name of the resource your prestige gain is based on.
+    baseAmount() { return player.points },  // A function to return the current amount of baseResource.
+    requires: new Decimal(10),              // The amount of the base needed to  gain 1 of the prestige currency.             // Also the amount required to unlock the layer.
+    type: "none",                         // Determines the formula used for calculating prestige currency.
+    exponent: 0.5,                          // "normal" prestige gain is (currency^exponent).
+    gainMult() {                            // Returns your multiplier to your gain of the prestige resource.
+        let mult = new Decimal(1)               // Factor in any bonuses multiplying gain here.
+        return mult
+    },
+    gainExp() {                             // Returns the exponent to your gain of the prestige resource.
+        return new Decimal(1)
+    },
+    layerShown() { return player.CO.unlocked()&&inArea("main")},          // Returns a bool for if this layer's node should be visible in the tree.
+    upgrades: {
+    	11: {
+		    title: "Wires",
+		    description: "Autobuy stick upgrades",
+		    cost: new Decimal(10),
+		    currencyDisplayName: "Red Copper",
+		    currencyInternalName: "redcopper",
+		    currencyLayer: "CO",
+		    branches: [16]
+	    },
+	    12: {
+		    title: "Connection",
+		    description: "Autobuy wood upgrades",
+		    cost: new Decimal(10),
+		    currencyDisplayName: "Green Copper",
+		    currencyInternalName: "greencopper",
+		    currencyLayer: "CO",
+		    branches: [14,17]
+	    },
+	    13: {
+		    title: "Transfer",
+		    description: "Auto prestige stone",
+		    cost: new Decimal(10),
+		    currencyDisplayName: "Blue Copper",
+		    currencyInternalName: "bluecopper",
+		    currencyLayer: "CO",
+		    branches: [15]
+	    },
+	    // row 2
+	    14: {
+		    title: "Lumbermill",
+		    description: "Generate 1% of wood passively",
+		    cost: new Decimal(15),
+		    currencyDisplayName: "Green Copper",
+		    currencyInternalName: "greencopper",
+		    currencyLayer: "CO",
+		    unlocked() {return hasUpgrade("CO", 12)}
+	    },
+	    15: {
+		    title: "Stone-Friendly",
+		    description: "Stone resets nothing, auto upgrade",
+		    cost: new Decimal(15),
+		    currencyDisplayName: "Blue Copper",
+		    currencyInternalName: "bluecopper",
+		    currencyLayer: "CO",
+		    unlocked() {return hasUpgrade("CO", 13)},
+		    branches: [19]
+	    },
+	    16: {
+		    title: "Copper Infusinator",
+		    description: "Generate 100 stone sticks every second",
+		    cost: new Decimal(15),
+		    currencyDisplayName: "Red Copper",
+		    currencyInternalName: "redcopper",
+		    currencyLayer: "CO",
+		    unlocked() {return hasUpgrade("CO", 11)},
+		    branches: [18]
+	    },
+	    17: {
+		    title: "Copper Refiners",
+		    description: "Generate refined wood based on wood",
+		    cost: new Decimal(15),
+		    currencyDisplayName: "Green Copper",
+		    currencyInternalName: "greencopper",
+		    currencyLayer: "CO",
+		    tooltip: "x^0.5",
+		    unlocked() {return hasUpgrade("CO", 12)}
+	    },
+	    // row 3
+	    18: {
+		    title: "Test Tubes",
+		    description: "Researcher upgrades don't reset",
+		    cost: new Decimal(20),
+		    currencyDisplayName: "Red Copper",
+		    currencyInternalName: "redcopper",
+		    currencyLayer: "CO",
+		    unlocked() {return hasUpgrade("CO", 15)},
+		    branches: [21]
+	    },
+	    19: {
+		    title: "Cytoplasm",
+		    description: "Leaf upgrades don't reset",
+		    cost: new Decimal(20),
+		    currencyDisplayName: "Blue Copper",
+		    currencyInternalName: "bluecopper",
+		    currencyLayer: "CO",
+		    unlocked() {return hasUpgrade("CO", 16)},
+		    branches: [21]
+	    },
+	    //row 4
+	    21: {
+		    title: "Volcanic Eruption",
+		    description: "New fire stage and coal milestones",
+		    cost: new Decimal(25),
+		    currencyDisplayName: "Red Copper",
+		    currencyInternalName: "redcopper",
+		    currencyLayer: "CO",
+		    unlocked() {return hasUpgrade("CO", 18)&&hasUpgrade("CO", 19)},
+		    branches: [22, 23]
+	    },
+	    //row 5
+	    22: {
+		title: "Copper Solidifier",
+		description: "Unlock copper converting",
+		cost: new Decimal(7),
+		currencyDisplayName: "magnets",
+		currencyInternalName: "points",
+		currencyLayer: "M",
+		unlocked() {return hasUpgrade(this.layer, 21)}
+	    },
+	    23: {
+		title: "R&T",
+		description: "Unlock Rank and Tier",
+		cost: new Decimal(1),
+		unlocked() {return hasUpgrade(this.layer, 21)}
+	    }
+    },
+    buyables: { // increases as you have more copper
+    	11: { // formula 5*(1.5^x)
+    		title: "Create Copper",
+    		cost(x) {return new Decimal(5).times(new Decimal(1.5).pow(player.CO.points)).div(getBuyableAmount("CO", 12).gte(5) ? 8 : 1)},
+    		display() {return "Cost: "+format(this.cost())+" red, green and blue copper"},
+    		canAfford() {return player.CO.redcopper.gte(this.cost())&&player.CO.greencopper.gte(this.cost())&&player.CO.bluecopper.gte(this.cost())},
+    		buy(){
+    			player.CO.redcopper = player.CO.redcopper.sub(this.cost())
+    			player.CO.greencopper = player.CO.greencopper.sub(this.cost())
+    			player.CO.bluecopper = player.CO.bluecopper.sub(this.cost())
+    			player.CO.points = player.CO.points.plus(1)
+    			setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+    		},
+    		unlocked(){return hasUpgrade("CO", 22)}
+    	},
+    	12: { // ranks
+    		title() {return "Rank "+format(getBuyableAmount("CO", 12))}, // start 1, multiply by 2 every rank
+    		cost(x) {return new Decimal(1).times(new Decimal(2).pow(x)).floor()},
+    		display() {
+    			let x = getBuyableAmount(this.layer, this.id)
+    			let y = ""
+    			if(x.gte(0)&&x.lt(1)) y = "At Rank 1: 2x red, green and blue copper."
+    			if(x.gte(1)&&x.lt(2)) y = "At Rank 2: Unlock more buyables."
+    			if(x.gte(2)&&x.lt(3)) y = "At Rank 3: Colored coppers are boosted by 1.25^x, where x is your rank."
+    			if(x.gte(3)&&x.lt(5)) y = "At Rank 5: Divide copper cost by 8"
+    			if(x.gte(5)&&x.lt(6)) y = "At Rank 6: Unlock Dimensional Sacrifice in AD"
+    			return "Reset everything in this layer but upgrades and tier, and rank up. <br>"+y+"<br>Cost: "+format(this.cost())+" copper"
+    		},
+    		canAfford() {return player.CO.points.gte(this.cost())},
+    		buy(){
+    			player.CO.points = new Decimal(0)
+    			player.CO.redcopper = new Decimal(0)
+    			player.CO.greencopper = new Decimal(0)
+    			player.CO.bluecopper = new Decimal(0)
+    			setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+    			setBuyableAmount(this.layer, 21, new Decimal(0))
+    			setBuyableAmount(this.layer, 22, new Decimal(0))
+    			setBuyableAmount(this.layer, 23, new Decimal(0))
+    		},
+    		unlocked(){return hasUpgrade("CO", 22)},
+    		style: {
+    			"height": "100px",
+    			"border-radius": "0%"
+    		}
+    	},
+    	13: { // tiers
+    		title() {return "Tier "+format(getBuyableAmount("CO", 13))},
+    		cost(x) {return new Decimal(4).times(new Decimal(2).pow(x)).floor()},
+    		display() {
+    			let x = getBuyableAmount(this.layer, this.id)
+    			let y = ""
+    			if(x.gte(0)&&x.lt(1)) y = "At Tier 1: 3x red, green and blue copper."
+    			return "Reset everything in this layer but upgrades, and tier up. <br>"+y+"<br>Requires Rank "+format(this.cost())
+    		},
+    		canAfford() {return getBuyableAmount("CO",  12).gte(this.cost())},
+    		buy(){
+    			player.CO.points = new Decimal(0)
+    			player.CO.redcopper = new Decimal(0)
+    			player.CO.greencopper = new Decimal(0)
+    			player.CO.bluecopper = new Decimal(0)
+    			setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+    			setBuyableAmount(this.layer, 12, new Decimal(0))
+    			setBuyableAmount(this.layer, 21, new Decimal(0))
+    			setBuyableAmount(this.layer, 22, new Decimal(0))
+    			setBuyableAmount(this.layer, 23, new Decimal(0))
+    		},
+    		unlocked(){return hasUpgrade("CO", 22)},
+    		style: {
+    			"height": "100px",
+    			"border-radius": "0%"
+    		}
+    	},
+    	21: {
+    		title() {return "Crimson ("+format(getBuyableAmount(this.layer, this.id))+")"},
+    		cost(x) {return new Decimal(3).times(new Decimal(3).pow(x))},
+    		display() {return "x2 red copper compounding.<br>Effect: "+format(this.effect())+"x<br>Cost: "+format(this.cost())+" red copper"},
+    		canAfford() {return player.CO.redcopper.gte(this.cost())},
+    		buy(){
+    			player.CO.redcopper = player.CO.redcopper.sub(this.cost())
+    			setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+    		},
+    		unlocked(){return getBuyableAmount("CO", 12).gte(2)},
+    		effect(x) {
+    			return new Decimal(1).times(new Decimal(2).pow(x))
+    		},
+    		style: {
+    			"height": "75px",
+    			"border-radius": "0%"
+    		}
+    	},
+    	22: {
+    		title() {return "Lime ("+format(getBuyableAmount(this.layer, this.id))+")"},
+    		cost(x) {return new Decimal(3).times(new Decimal(3).pow(x))},
+    		display() {return "x2 green copper compounding.<br>Effect: "+format(this.effect())+"x<br>Cost: "+format(this.cost())+" green copper"},
+    		canAfford() {return player.CO.greencopper.gte(this.cost())},
+    		buy(){
+    			player.CO.greencopper = player.CO.greencopper.sub(this.cost())
+    			setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+    		},
+    		unlocked(){return getBuyableAmount("CO", 12).gte(2)},
+    		effect(x) {
+    			return new Decimal(1).times(new Decimal(2).pow(x))
+    		},
+    		style: {
+    			"height": "75px",
+    			"border-radius": "0%"
+    		}
+    	},
+    	23: {
+    		title() {return "Sky ("+format(getBuyableAmount(this.layer, this.id))+")"},
+    		cost(x) {return new Decimal(3).times(new Decimal(3).pow(x))},
+    		display() {return "x2 blue copper compounding.<br>Effect: "+format(this.effect())+"x<br>Cost: "+format(this.cost())+" blue copper"},
+    		canAfford() {return player.CO.bluecopper.gte(this.cost())},
+    		buy(){
+    			player.CO.bluecopper = player.CO.bluecopper.sub(this.cost())
+    			setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+    		},
+    		unlocked(){return getBuyableAmount("CO", 12).gte(2)},
+    		effect(x) {
+    			return new Decimal(1).times(new Decimal(2).pow(x))
+    		},
+    		style: {
+    			"height": "75px",
+    			"border-radius": "0%"
+    		}
+    	},
+    },
+    tabFormat: [
+    	["row", [
+    		"main-display",
+    		["display-image", "resources/coppericon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "10px"}]
+    	]],
+    	"resource-display",
+    	["display-text", function() {return "Click on the appearing copper images to collect them! (They appear anywhere on your screen)"}],
+    	["display-text", function() {return "<div id='coppershow'><img src='resources/redcoppericon.png' alt='redcoppericon.png' width=30 height=30 style='display: inline-block; vertical-align: middle'>Red Copper: "+format(player.CO.redcopper)+"</img><br><img src='resources/greencoppericon.png' alt='greencoppericon.png' width=30 height=30 style='display: inline-block; vertical-align: middle'>Green Copper: "+format(player.CO.greencopper)+"</img><br><img src='resources/bluecoppericon.png' alt='bluecoppericon.png' width=30 height=30 style='display: inline-block; vertical-align: middle'>Blue Copper: "+format(player.CO.bluecopper)+"</img></div>"}],
+    	"blank",
+    	["row", [["upgrade", 11], "blank", ["upgrade", 12], "blank", ["upgrade", 13]]],
+    	"blank",
+    	["row", [["upgrade", 14], "blank", ["upgrade", 15], "blank", ["upgrade", 16], "blank", ["upgrade", 17]]],
+    	"blank",
+    	["row", [["upgrade", 18], "blank", ["upgrade", 19]]],
+    	"blank",
+    	["upgrade", 21],
+    	"blank",
+    	["row", [["upgrade", 22], "blank", ["upgrade", 23]]],
+    	"blank",
+    	["row", [["buyable", 11], ["column", [["buyable", 12], ["buyable", 13]]]]],
+    	"blank",
+    	["column", [["buyable", 21], ["buyable", 22], ["buyable", 23]]],
+    	"blank",
+    	["display-text", function(){return "Rank & Tier Rewards"}],
+    	//rank
+    	["display-text", function(){
+    		let x = getBuyableAmount("CO", 12)
+    		let y = ""
+    		if(x.gte(1))y = y+"Rank 1 - x2 red, green and blue copper<br>"
+    		if(x.gte(2))y=y+"Rank 2 - Unlock more buyables<br>"
+    		if(x.gte(3))y=y+"Rank 3 - Colored coppers are boosted by 1.25^x, where x is your rank.<br>Currently: "+format(new Decimal(1.25).pow(x))+"x<br>"
+    		if(x.gte(5))y=y+"Rank 5 - Divide copper cost by 8<br>"
+    		if(x.gte(6))y=y+"Rank 6 - Unlock Dimensional Sacrifice in AD<br>"
+    		return y
+    	}],
+    	"h-line",
+    	//tier
+    	["display-text", function(){
+    		let x = getBuyableAmount("CO", 13)
+    		let y = ""
+    		if(x.gte(1))y = y+"Tier 1 - x3 red, green and blue copper<br>"
+    		return y
+    	}]
+    ],
+    componentStyles: {
+    	"upgrade"() { return {'border-radius': '0%'}}
+    }
+}),
+
+//MINI LAYERS
 
 addLayer("ms", { // Mini sticks in the Mini tree
     name: "Mini sticks",
@@ -312,7 +658,7 @@ addLayer("ms", { // Mini sticks in the Mini tree
         unlocked: true,                     // You can add more variables here to add them to your layer.
         points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
     }},
-    previousTab: "C",
+    prevTab: "C",
     color: "#c79769",                       // The color for this layer, which affects many elements.
     resource: "mini sticks",            // The name of this layer's main prestige resource.
     row: -10,                                 // The row this layer is on (0 is the first row).
@@ -421,6 +767,7 @@ addLayer("mw", { // Mini sticks in the Mini tree
         unlocked: true,                     // You can add more variables here to add them to your layer.
         points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
     }},
+    prevTab: "C",
     color: "#856d4e",                       // The color for this layer, which affects many elements.
     resource: "mini wood",            // The name of this layer's main prestige resource.
     row: -10,                                 // The row this layer is on (0 is the first row).
@@ -520,6 +867,7 @@ addLayer("mst", { // Mini sticks in the Mini tree
         unlocked: true,                     // You can add more variables here to add them to your layer.
         points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
     }},
+    prevTab: "C",
     color: "#bababa",                       // The color for this layer, which affects many elements.
     resource: "mini stone",            // The name of this layer's main prestige resource.
     row: -10,                                 // The row this layer is on (0 is the first row).
@@ -592,6 +940,7 @@ addLayer("ml", { // Mini leaves in the Mini tree
         unlocked: true,                     // You can add more variables here to add them to your layer.
         points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
     }},
+    prevTab: "C",
     color: "#42f56c",                       // The color for this layer, which affects many elements.
     resource: "mini leaf",            // The name of this layer's main prestige resource.
     row: -10,                                 // The row this layer is on (0 is the first row).
@@ -658,6 +1007,7 @@ addLayer("mr", { // Mini leaves in the Mini tree
         unlocked: true,                     // You can add more variables here to add them to your layer.
         points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
     }},
+    prevTab: "C",
     color: "#c98ced",                       // The color for this layer, which affects many elements.
     resource: "mini researchers",            // The name of this layer's main prestige resource.
     row: -10,                                 // The row this layer is on (0 is the first row).
@@ -724,6 +1074,7 @@ addLayer("mti", { // Mini tin in the Mini tree
         points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
         goofy: new Decimal(0)
     }},
+    prevTab: "C",
     nodeStyle: {
     	"border-radius": "0%",
         "box-shadow": "inset 0px 0px 10px #000000"

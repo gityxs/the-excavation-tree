@@ -321,7 +321,7 @@ function autobuyUpgrades(layer){
 function gameLoop(diff) {
 	if (isEndgame() || tmp.gameEnded){
 		tmp.gameEnded = true
-		clearParticles()
+		//clearParticles()
 	}
 
 	if (isNaN(diff) || diff < 0) diff = 0

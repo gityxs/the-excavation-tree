@@ -18,16 +18,19 @@ addLayer("S", {
 	if (layers[reset].row > this.row) layerDataReset("S", keep)
     },
     passiveGeneration() {
-	if ( hasUpgrade("W", 24) )
-		if ( hasUpgrade("R", 14) )
-		    if ( hasUpgrade("T", 41) )
-			    return new Decimal(1)
-			else
-			    return new Decimal(0.1)
-		else
-			return new Decimal(0.01)
-	else
-		return new Decimal(0)
+	if ( hasUpgrade("T", 41) ) {
+		return new Decimal(1)
+	} else {
+		if ( hasUpgrade("R", 14) ) {
+			return new Decimal(0.1)
+		} else {
+		    if ( hasUpgrade("W", 24) ) {
+			    return new Decimal(0.01)
+		    } else {
+				return new Decimal(0)
+		    }
+		}
+	}
     },
     microtabs: {
         stuff: {
@@ -70,6 +73,10 @@ addLayer("S", {
 	if ( hasUpgrade("F", 11) ) mult = mult.times(10)
 	if(hasMilestone("C", 0)) mult = mult.times(3)
 	mult = mult.times(getBuyableAmount("C", 32).times(2).plus(1))
+	if(hasMilestone("C", 1))mult=mult.times(10)
+	if(hasMilestone("F", 4))mult=mult.times(10)
+	if ( hasUpgrade("F", 12) ) mult = mult.times(100)
+	if(hasUpgrade("B", 24))mult=mult.times(upgradeEffect("B", 24))
 	if( player.L.status.eq(1) ) {
 		mult = mult.times(0.5)
 	}
@@ -85,7 +92,11 @@ addLayer("S", {
     },
     row: 0, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
-        {key: "s", description: "S: Reset for Sticks.", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        {
+            key: "s", // What the hotkey button is. Use uppercase if it's combined with shift, or "ctrl+x" for holding down ctrl.
+            description: "s: reset your exp for sticks", // The description of the hotkey that is displayed in the game's How To Play tab
+            onPress() { if (player.S.unlocked) if (canReset(this.layer)) doReset("S") },
+        }
     ],
     stonestick() {
     	let mult = new Decimal(1)
@@ -337,15 +348,27 @@ addLayer("S", {
     layerShown(){return inArea("main")},
     isActive(){return tmp.S.layerShown},
     tabFormat: [
-    	"main-display",
-	["display-text", function() { if ( hasUpgrade("ST", 12) ) return "You have "+format(player.S.st)+" stone sticks" }],
+    	["row", [
+    		"main-display", 
+    		["display-image", "resources/stickicon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "10px"}]
+    	]],
+    	["row", [
+    		["display-text", function() { if ( hasUpgrade("ST", 12) ) return "You have "+format(player.S.st)+" stone sticks" }],
+    		["display-image", function() { if ( hasUpgrade("ST", 12) ) {return "resources/stonestickicon.png"} else {return "resources/none.png"}}, function() {if ( hasUpgrade("ST", 12) ) { return {"width": "50px", "height": "50px", "position": "relative", "bottom": "2px"}} else { return {"display": "none", "width": "50px", "height": "50px", "position": "relative", "bottom": "2px"}}}]
+    	]],
 	["display-text", function() { return "Your sticks has a boost of ×<em>"+format(tmp[this.layer].gainMult)+"</em>"}, { "color": "#a86e34", "font-size": "16px"}],
 	"prestige-button",
     	"blank",
     	"buyables",
     	"blank",
     	["microtabs", "stuff"]
-    ]
+    ],
+    autoUpgrade() {return hasUpgrade("CO", 11)},
+    update(diff){
+    	if(hasUpgrade("CO", 16)){
+    		player.S.st = player.S.st.plus(new Decimal(100).times(diff))
+    	}
+    }
 }),
 
 addLayer("W", {
@@ -385,6 +408,8 @@ addLayer("W", {
 			if ( hasUpgrade("F", 31) ) gain2 = gain2.times(10);
 			if(hasMilestone("C", 0)) gain2 = gain2.times(3);
 			gain2 = gain2.times(getBuyableAmount("C", 31).times(2).plus(1))
+			if(hasMilestone("C", 1))gain2=gain2.times(10)
+			if ( hasUpgrade("F", 32) ) mult = mult.times(100)
 			if( player.L.status.eq(1) ) {
 		        gain2 = gain2.times(0.5)
 	        }
@@ -579,16 +604,33 @@ addLayer("W", {
     },
     isActive() {return tmp.W.layerShown},
     tabFormat: [
-    	"main-display",
-	["display-text", function() { return "You have "+format(player.W.refinedwood)+" refined wood" }],
-	["display-text", function() { return "Your wood has a boost of ×<em>"+format(tmp[this.layer].gainMult)+"</em>"}, { "color": "#eb9846", "font-size": "16px"}],
+    	["row", [
+    		"main-display", 
+    		["display-image", "resources/woodicon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "10px"}]
+    	]],
+    	["row", [
+    		["display-text", function() { return "You have "+format(player.W.refinedwood)+" refined wood" }],
+    		["display-image", "resources/refinedwoodicon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "2px"}]
+    	]],
+    	["display-text", function() { return "Your wood has a boost of ×<em>"+format(tmp[this.layer].gainMult)+"</em>"}, { "color": "#eb9846", "font-size": "16px"}],
     	"blank",
     	"buyables",
     	"blank",
     	"clickables",
     	"blank",
     	"upgrades"
-    ]
+    ],
+    autoUpgrade() {return hasUpgrade("CO", 12)},
+    update(diff){
+    	if(hasUpgrade("CO", 17)){
+    		player.W.refinedwood = player.W.refinedwood.plus(player.W.points.pow(0.5).times(diff))
+    	}
+    	if(hasUpgrade("CO", 14)) {
+    		let gain = tmp.W.gainMult.div(100)
+    		let real = gain.times(diff)
+    		player.W.points = player.W.points.plus(real)
+    	}
+    }
 }),
 
 addLayer("T", {
@@ -627,6 +669,21 @@ addLayer("T", {
             		setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
 	    		player.T.points = player.T.points.plus(1)
         	}
+	},
+	12: {
+        	cost: new Decimal(25),
+		title: "Study - 1e23 Ethereal Sticks",
+        	display() { return "Study and get 1e15 research" },
+        	canAfford() { return player.ES2.points.gte( new Decimal("1e23") ) },
+		style: {
+			transform: "translate(0px, -10px)"
+		},
+		unlocked() {return hasUpgrade("T", 43)},
+        	buy() {
+            		player.ES2.points = player.ES2.points.sub("1e23")
+            		setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+	    		player.T.points = player.T.points.plus("1e15")
+        	}
 	}
     },
     upgrades: {
@@ -641,9 +698,6 @@ addLayer("T", {
 		description: "Unlock more stick upgrades",
 		cost: new Decimal(3),
 		unlocked() { return hasUpgrade("T", 11) },
-		style: {
-			transform: "translate(-10px, 25px)"
-		},
 		branches: [31]
 	    },
             22: {
@@ -651,9 +705,6 @@ addLayer("T", {
 		description: "Unlock the stone layer",
 		cost: new Decimal(5),
 		unlocked() { return hasUpgrade("T", 11) },
-		style: {
-			transform: "translate(10px, 25px)"
-		},
 		branches: [32, 33]
 	    },
 	    31: {
@@ -661,18 +712,12 @@ addLayer("T", {
 		description: "Unlock even more wood upgrades",
 		cost: new Decimal(10),
 		unlocked() { return hasUpgrade("T", 21) },
-		style: {
-			transform: "translate(50px, 50px)"
-		}
 	    },
 	    32: {
 		title: "Stone Tools",
 		description: "Unlock even more stick upgrades",
 		cost: new Decimal(15),
 		unlocked() { return hasUpgrade("T", 22) },
-		style: {
-			transform: "translate(70px, 50px)"
-		}
 	    },
 	    33: {
 		title: "Tin Cans",
@@ -680,31 +725,54 @@ addLayer("T", {
 		description: "Unlock the tin layer",
 		cost: new Decimal(500000),
 		unlocked() { return hasUpgrade("T", 22) },
-		style: {
-			transform: "translate(95px, 50px)"
-		}
 		},
 		41: {
 		title: "Ctiks",
 		description: "Gain 100% of your sticks",
 		cost: new Decimal(1000000),
 		unlocked() { return hasChallenge("B", 11) },
-		style: {
-			transform: "translate(275px, 75px)"
-		}
 	    },
 	    42: {
 		title: "Industrial Age",
 		description: "Unlock the coal layer",
 		cost: new Decimal("1e10"),
 		unlocked() { return hasUpgrade("F", 41) },
-		style: {
-			transform: "translate(10px, 75px)"
-		}
+		branches: [43]
+	    },
+	    43: {
+		title: "Otherworldly Research",
+		description: "Unlock a new study buyable",
+		cost: new Decimal("1e11"),
+		branches: [44],
+		unlocked() { return hasUpgrade("T", 42)&&hasAchievement("AD", 26) },
+	    },
+	    44: {
+		title: "The Base of Wiring",
+		description: "Unlock the Copper layer",
+		cost: new Decimal("2e16"),
+		unlocked() { return hasUpgrade("T", 43)},
 	    }
     },
     layerShown() { return (hasUpgrade("S", 22) || hasUpgrade("L", 11) || hasUpgrade("TI", 11) || hasMilestone("C", 0)) && inArea("main") },
-    isActive() {return tmp.T.layerShown}
+    isActive() {return tmp.T.layerShown},
+    tabFormat: [
+    	["row", [
+    		"main-display",
+    		["display-image", "resources/researchicon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "10px"}]
+    	]],
+    	"buyables",
+    	["row", [["upgrade", 11]]],
+    	"blank",
+    	["row", [["upgrade", 21], "blank", ["upgrade", 22]]],
+    	"blank",
+    	["row", [["upgrade", 31], "blank", ["upgrade", 32], "blank", ["upgrade", 33]]],
+    	"blank",
+    	["row", [["upgrade", 41], "blank", ["upgrade", 42]]],
+    	"blank",
+    	["upgrade", 43],
+    	"blank",
+    	["upgrade", 44]
+    ]
 }),
 
 addLayer("ACH", {
@@ -1090,7 +1158,86 @@ addLayer("ACH", {
 		    tooltip: "complete the first test",
 		    image: "resources/Ach60.png"
     	},
+    111: {
+        	name: "what is it",
+        	done() { return player.M2.points.gte(1)},
+		    tooltip: "get a monoium",
+		    image: "resources/Ach61.png"
+    	},
+    112: {
+        	name: "galaxy delivery",
+        	done() { return hasUpgrade("ES2", 34)},
+		    tooltip: "buy the 'Imported' upgrade",
+		    image: "resources/Ach62.png"
+    	},
+    113: {
+        	name: "TooEz",
+        	done() { return player.DS3.points.gte(1)},
+		    tooltip: "reset for a difficult stick",
+		    image: "resources/Ach63.png"
+    	},
+    114: {
+        	name: "a whole bunch",
+        	done() { return player.DS3.points.gte(10)},
+		    tooltip: "have 10 difficult sticks",
+		    image: "resources/Ach64.png"
+    	},
+    115: {
+        	name: "stick lines",
+        	done() { return hasUpgrade("CO", 11)&&hasUpgrade("CO", 12)&&hasUpgrade("CO", 13)},
+		    tooltip: "buy all row 1 copper upgrades",
+		    image: "resources/Ach65.png"
+    	},
+    	116: {
+        	name: "mind paying taxes",
+        	done() { return player.M.cash.gte("1e5")},
+		    tooltip: "have 100,000+ cash",
+		    image: "resources/Ach66.png"
+    	},
+    	121: {
+        	name: "wildfire",
+        	done() { return player.F.points.gte(6)},
+		    tooltip: "get 6 fire stages",
+		    image: "resources/Ach67.png"
+    	},
+    	122: {
+        	name: "the megawatt",
+        	done() { return player.B.points.gte("1e6")},
+		    tooltip: "have 1,000,000 power",
+		    image: "resources/Ach68.png"
+    	},
+    	123: { //secret ach
+        	name: "REALLY effective",
+        	done() { return player.points.gte("1e30")&&inChallenge("B", 12)},
+		    tooltip() { 
+		    	if(hasAchievement(this.layer, this.id)) {
+		    		return "have 1e30 exp during the Ineffective Learning challenge"
+		    	} else {
+		    		return "maybe way too effective"
+		    	}
+		    },
+		    image: "resources/Ach69.png"
+    	},
+    	124: {
+        	name: "rank #1",
+        	done() { return getBuyableAmount("CO", 12).gte(1)},
+		    tooltip: "get rank 1",
+		    image: "resources/Ach70.png"
+    	},
+    	125: {
+        	name: "where's the reward",
+        	done() { return getBuyableAmount("CO", 12).gte(4)},
+		    tooltip: "get rank 4",
+		    image: "resources/Ach71.png"
+    	},
+    	126: {
+        	name: "upperclassman",
+        	done() { return getBuyableAmount("CO", 13).gte(1)},
+		    tooltip: "get tier 1",
+		    image: "resources/Ach72.png"
+    	},
     },
+    
     layerShown() { return hasUpgrade("S", 22) || hasUpgrade("L", 11) || hasUpgrade("TI", 11) || hasMilestone("C", 0) }
 }),
 
@@ -1127,7 +1274,11 @@ addLayer("ST", {
     },
     row: 1, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
-        {key: "t", description: "T: Reset for sTone.", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        {
+            key: "S", // What the hotkey button is. Use uppercase if it's combined with shift, or "ctrl+x" for holding down ctrl.
+            description: "shift + s: reset your sticks for stone", // The description of the hotkey that is displayed in the game's How To Play tab
+            onPress() { if (player.ST.unlocked) if (canReset(this.layer)) doReset("ST") },
+        }
     ],
     milestones: {
     	0: {
@@ -1197,14 +1348,20 @@ addLayer("ST", {
     layerShown(){ return hasUpgrade("T", 22) && inArea("main") },
     isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
-    	"main-display",
+    	["row", [
+    		"main-display", 
+    		["display-image", "resources/stoneicon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "10px"}]
+    	]],
     	["display-text", function() { return "You have made a total of "+format(player.ST.total)+" stone" }],
-	"prestige-button",
-	"blank",
+    	"prestige-button",
+    	"blank",
     	"upgrades",
     	"blank",
     	"milestones"
-    ]
+    ],
+    autoPrestige() {return hasUpgrade("CO", 13)},
+    resetsNothing() {return hasUpgrade("CO", 15)},
+    autoUpgrade() {return hasUpgrade("CO", 15)}
 }),
 
 addLayer("L", {
@@ -1224,6 +1381,7 @@ addLayer("L", {
 	keep = [];
 	if (reset == "R") keep.push("upgrades");
 	if (reset == "R") layerDataReset("L", keep)
+	if(hasUpgrade("CO", 19)&&reset!="R") keep.push("upgrades")
 	if (layers[reset].row > this.row) layerDataReset("L", keep)
     },
     nodeStyle: {
@@ -1243,6 +1401,7 @@ addLayer("L", {
 	if ( hasUpgrade("L", 21) ) mult = mult.times(2)
 	if ( hasUpgrade("TI", 11) ) mult = mult.times(2)
 	if ( hasUpgrade("TI", 12) ) mult = mult.times(upgradeEffect("TI", 12))
+	if(hasMilestone("C", 1))mult=mult.times(10)
 	if( player.L.status.eq(1) ) {
 		        mult = mult.times(0.5)
 	        }
@@ -1256,7 +1415,11 @@ addLayer("L", {
     },
     row: 1, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
-        {key: "l", description: "L: Reset for Leaves", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        {
+            key: "l", // What the hotkey button is. Use uppercase if it's combined with shift, or "ctrl+x" for holding down ctrl.
+            description: "l: reset your ref. wood for leaves", // The description of the hotkey that is displayed in the game's How To Play tab
+            onPress() { if (player.L.unlocked) if (canReset(this.layer)) doReset("L") },
+        }
     ],
     upgrades: {
 	    11: {
@@ -1455,12 +1618,15 @@ addLayer("L", {
     layerShown(){ return hasUpgrade("S", 32) && inArea("main")},
     isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
-    	"main-display",
+    	["row", [
+    		"main-display", 
+    		["display-image", "resources/leaficon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "10px"}]
+    	]],
          "resource-display",
 	    ["display-text", function() { return "Your leaves has a boost of ×<em>"+format(tmp[this.layer].gainMult)+"</em>"}, { "color": "#32a852", "font-size": "16px"}],
     	"prestige-button",
         ["microtabs", "stuff"]
-    ]
+    ],
 }),
 
 addLayer("R", {
@@ -1495,6 +1661,7 @@ addLayer("R", {
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
 	if ( hasUpgrade("R", 14) ) mult = mult.times(upgradeEffect("R", 14))
+	if(hasMilestone("C", 1))mult=mult.times(10)
 	if( player.L.status.eq(1) ) {
 		        mult = mult.times(0.5)
 	        }
@@ -1508,7 +1675,11 @@ addLayer("R", {
     },
     row: 1, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
-        {key: "r", description: "R: Reset for Researchers", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        {
+            key: "r", // What the hotkey button is. Use uppercase if it's combined with shift, or "ctrl+x" for holding down ctrl.
+            description: "r: reset your leaves for researchers", // The description of the hotkey that is displayed in the game's How To Play tab
+            onPress() { if (player.R.unlocked) if (canReset(this.layer)) doReset("R") },
+        }
     ],
     upgrades: {
 	    11: {
@@ -1594,14 +1765,22 @@ addLayer("R", {
     layerShown(){ return hasMilestone("ST", 1) && inArea("main")},
     isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
-    	"main-display",
+    	["row", [
+    		"main-display", 
+    		["display-image", "resources/researchericon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "10px"}]
+    	]],
         "resource-display",
     	["display-text", function() { return "Your researchers are making "+format(player.R.rps)+" research per tick, where each researcher makes "+format(player.R.rpr)+" research." }],
         ["display-text", function() { return "Your researchers has a boost of ×<em>"+format(tmp[this.layer].gainMult)+"</em>"}, { "color": "#7240b3", "font-size": "16px"}],
 	    "prestige-button",
 	    "blank",
     	"upgrades"
-    ]
+    ],
+    doReset(reset) {
+		keep = []
+		if ( hasUpgrade("CO", 18) ) keep.push("upgrades")
+		if ( layers[reset].row > this.row ) layerDataReset("R", keep)
+    }
 }),
 
 addLayer("TR", {
@@ -1735,7 +1914,11 @@ addLayer("TI", {
     },
     row: 2, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
-        {key: "i", description: "I: Reset for tIn.", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        {
+            key: "t", // What the hotkey button is. Use uppercase if it's combined with shift, or "ctrl+x" for holding down ctrl.
+            description: "t: reset your stone for tin", // The description of the hotkey that is displayed in the game's How To Play tab
+            onPress() { if (player.TI.unlocked) if (canReset(this.layer)) doReset("TI") },
+        }
     ],
     nodeStyle: {
 	"border-radius": "25% / 25%",
@@ -1782,14 +1965,18 @@ addLayer("TI", {
     layerShown(){return hasUpgrade("T", 33) && inArea("main")},
     isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
-    	"main-display",
+    	["row", [
+    		"main-display", 
+    		["display-image", "resources/tinicon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "10px"}]
+    	]],
 	["display-text", function() { if ( player.TI.tinium.gte(new Decimal(1)) ) return "You have "+format(player.TI.tinium)+" tinium" }],
 	"prestige-button",
     	"blank",
     	"buyables",
     	"blank",
     	"upgrades"
-    ]
+    ],
+    roundUpCost: true
 }),
 
 addLayer("RE", {
@@ -1976,7 +2163,7 @@ addLayer("RE", {
     layerShown() { return (hasUpgrade("TI", 12) || hasMilestone("C", 0) && !inChallenge("B", 12) && !inChallenge("B", 13)) && inArea("main") },
     isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
-	["display-text", function() { return "Welcome to the Recovery Layer, in here you will get some recovery buyables. THEY WILL NOT DECREASE!"}],
+	["display-text", function() { return "Welcome to the Recovery Layer, in here you will get some recovery buyables. Currency you use to buy will NOT be spent."}],
     	"blank",
 	"buyables"
     ],
@@ -2021,6 +2208,10 @@ addLayer("B", {
 	if (hasChallenge("B", 12)) gain4 = gain4.times(2)
 	if (hasUpgrade("B", 22)) gain4 = gain4.times(2)
 	if(hasMilestone("C", 0)) gain4 = gain4.times(3)
+	if(hasMilestone("C", 1))gain4=gain4.times(5)
+	if(hasUpgrade("B", 31))gain4=gain4.times(50)
+	if(inChallenge("B", 21))gain4=gain4.pow(0.5)
+	if(hasUpgrade("M", 21))gain4=gain4.times(upgradeEffect("M", 21))
 	hat = new Decimal(100)
 	hat = hat.plus(getBuyableAmount("B", 12).times(25))
 	if (hasUpgrade("B", 11)) hat = hat.times(2)
@@ -2028,7 +2219,11 @@ addLayer("B", {
 	if (hasUpgrade("B", 14)) hat = hat.times(2)
 	if (hasUpgrade("B", 21)) hat = hat.times(2)
 	if (hasUpgrade("B", 23)) hat = hat.times(2)
+	if(hasChallenge("B", 13)) hat = hat.times(2)
 	if(hasMilestone("C", 0)) hat = hat.times(3)
+	if(hasUpgrade("B", 31))hat=hat.times(10)
+	if(inChallenge("B", 21))hat=hat.pow(0.5)
+	if(hasUpgrade("M", 21))hat=hat.times(upgradeEffect("M", 21))
 	player.B.cap = new Decimal(0).plus(hat)
 	player.B.speed = new Decimal(0).plus(gain4)
 	if (player.B.points.lt(player.B.cap) ) player.B.points = player.B.points.plus(player.B.speed)
@@ -2062,12 +2257,6 @@ addLayer("B", {
     },
     row: "2", // Row the layer is in on the tree (0 is the first row)
     position: 1,
-    infoboxes: {
-        warning: {
-            title: "Warning",
-            body() { return "If any of your battery upgrades amount exceed 20 (or have an large amount of cost, or you are softlocked) then please go to options and click Fix Battery Upgrades." },
-        }
-    },
     challenges: {
         11: {
             name: "Broken Sticks",
@@ -2078,17 +2267,8 @@ addLayer("B", {
 	              "border-radius": "5% / 5%"
             },
             onEnter() {
-            	player.points = new Decimal(10),
-                player.ST.milestones = [],
-                player.ST.points = new Decimal(0),
-                player.ST.upgrades = [],
-                player.ST.total = new Decimal(0),
-                player.L.points = new Decimal(0),
-                player.L.upgrades = [],
-                player.R.points = new Decimal(0),
-                player.R.upgrades = [],
-                player.R.rpr = new Decimal(1),
-                doReset("ST", true)
+            	player.points = new Decimal(10)
+                doReset("TI", true)
             },
             canComplete: function() {return player.points.gte(1000)}
         },
@@ -2127,6 +2307,23 @@ addLayer("B", {
                 player.W.upgrades = []
             },
             canComplete: function() {return player.points.gte("1e9")}
+        },
+        21: {
+            name: "Power Outage",
+            challengeDescription: "Reset power and buyables, charge and capacity are ^0.5",
+            goalDescription: "Get 195 power",
+            rewardDescription: "Unlock more battery upgrades",
+            style: {
+	              "border-radius": "5% / 5%"
+            },
+            unlocked() {return hasUpgrade("F", 42)},
+            onEnter() {
+            	player.B.points = new Decimal(0)
+            	setBuyableAmount("B", 11, new Decimal(0))
+            	setBuyableAmount("B", 12, new Decimal(0))
+            	setBuyableAmount("B", 13, new Decimal(0))
+            },
+            canComplete: function() {return player.B.points.gte(195)}
         },
     },
     buyables: {
@@ -2246,17 +2443,61 @@ addLayer("B", {
 		style: {
 	              "border-radius": "5% / 5%"
         }
-	    }
+	    },
+	    24:{
+		title: "Powered Sticks",
+		description: "Sticks are boosted based on your power",
+		cost: new Decimal(100000),
+		unlocked() { return hasChallenge("B", 21) },
+		style: {
+	              "border-radius": "5% / 5%"
+        },
+        effect() {return player.B.points.plus(10000).pow(0.4)},
+        effectDisplay() {return format(upgradeEffect(this.layer, this.id))+"x"},
+        tooltip: "(x+10,000)^0.4"
+	    },
+	    31:{
+		title: "Steam Generators",
+		description: "x50 charge gain, x10 capacity",
+		cost: new Decimal(125000),
+		unlocked() { return hasChallenge("B", 21) },
+		style: {
+	              "border-radius": "5% / 5%"
+        }
+	    },
+	    32:{
+		title: "Experiencing Sparks",
+		description: "Experience is boosted by your power",
+		cost: new Decimal("1e6"),
+		unlocked() { return hasChallenge("B", 21) },
+		style: {
+	              "border-radius": "5% / 5%"
+        },
+        effect() {return player.B.points.plus(625).sqrt()},
+        effectDisplay() {return format(upgradeEffect(this.layer, this.id))+"x"},
+        tooltip: "sqrt(x+625)"
+	    },
+	    33:{
+		title: "NetMag",
+		description: "Unlock more magnet upgrades",
+		cost: new Decimal("1.25e6"),
+		unlocked() { return hasChallenge("B", 21) },
+		style: {
+	              "border-radius": "5% / 5%"
+        }
+	    },
     },
     tooltip() { return format(player[this.layer].points)+"/"+format(player[this.layer].cap)+" power" },
     layerShown() { return hasUpgrade("TI", 12) && inArea("main")},
     isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
-	["display-text", function() { return "Your battery is storing "+format(player[this.layer].points)+" power, and is getting charged "+format(player.B.speed)+" per tick, and has a maximum of "+format(player[this.layer].cap)+" power, which boosts experience gain by ×"+format(player.B.points.plus(15).log10().pow(0.5))}],
-    	"blank",
+    ["row", [
+		["display-text", function() { return "Your battery is storing "+format(player[this.layer].points)+" power, and is getting charged "+format(player.B.speed)+" per tick, and has a maximum of "+format(player[this.layer].cap)+" power, which boosts experience gain by ×"+format(player.B.points.plus(15).log10().pow(0.5))}],
+		["display-image", "resources/batteryicon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "0px"}]
+	]],
+    "blank",
     ["bar", "bigBar"],
     "blank",
-    ["infobox", "warning"],
     "blank",
 	"buyables",
 	"blank",
@@ -2300,7 +2541,7 @@ addLayer("M", {
             Attraction: {
                 content: [
                     ["display-text", function() {
-                    	return "Here you can use your magnets to attract!"
+                    	return "Here you can use your magnets to attract! (Holding also works)"
                         	
                     }],
                     "blank",
@@ -2336,7 +2577,10 @@ addLayer("M", {
             },
             Shop: {
                 content: [
-                    ["display-text", function() { return "You have "+format(player.M.cash)+" cash" }],
+                	["row", [
+                 	   ["display-text", function() { return "You have "+format(player.M.cash)+" cash" }],
+                 	   ["display-image", "resources/cashicon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "0px"}]
+                	]],
                     ["row", [ ["buyable", 13], ["buyable", 14], ["buyable", 15] ] ]
                 ],
                 unlocked() {return player.M.points.gte(1)}
@@ -2359,7 +2603,11 @@ addLayer("M", {
     },
     row: 2, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
-        {key: "m", description: "M: Reset for Magnets.", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        {
+            key: "m", // What the hotkey button is. Use uppercase if it's combined with shift, or "ctrl+x" for holding down ctrl.
+            description: "m: reset your power for magnets", // The description of the hotkey that is displayed in the game's How To Play tab
+            onPress() { if (player.M.unlocked) if (canReset(this.layer)) doReset("M") },
+        }
     ],
     resetDescription: "Create ",
     buyables: {
@@ -2411,12 +2659,14 @@ addLayer("M", {
             	    let lol = player.M.bottle.plus(player.M.spoon.times(2).plus(player.M.box.times(4).plus(player.M.plastic.times(8).plus(player.M.cloth.times(16)))))
                     if(hasUpgrade("M", 12)) lol = lol.times(upgradeEffect("M", 12))
                     if(hasMilestone("C", 0)) lol = lol.times(3)
+                    if(hasMilestone("F", 2)) lol = lol.times(new Decimal(5).pow(milestoneLength("F")-2))
                     return "Sell your objects which gives you "+format(lol)+" cash."},
             	canAfford() { return true },
             	buy() {
             	    let smth = player.M.bottle.plus(player.M.spoon.times(2).plus(player.M.box.times(4).plus(player.M.plastic.times(8).plus(player.M.cloth.times(16)))))
                     if(hasUpgrade("M", 12)) smth = smth.times(upgradeEffect("M", 12)).plus(1)
                     if(hasMilestone("C", 0)) smth = smth.times(3)
+                    if(hasMilestone("F", 2)) smth = smth.times(new Decimal(5).pow(milestoneLength("F")-2))
                     player.M.cash = player.M.cash.plus(smth)
 			        player.M.bottle = new Decimal(0)
 			        player.M.spoon = new Decimal(0)
@@ -2518,12 +2768,24 @@ addLayer("M", {
 		currencyInternalName: "cloth",
 		currencyLayer: "M",
 		unlocked() {return hasUpgrade(this.layer, 13)}
+	    },
+	    21: {
+		title: "Bottled Power",
+		description: "Boost both charge gain and capacity based on your bottles",
+		cost: new Decimal(6),
+		unlocked() {return hasUpgrade("B", 33)},
+		effect() { return player.M.bottle.plus(10).sqrt() },
+		effectDisplay() { return format(upgradeEffect("M", 21).plus(1))+"x" },
+		tooltip: "sqrt(x+10)"
 	    }
     },
     layerShown(){return hasChallenge("B", 12) && inArea("main")},
     isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
-    	"main-display",
+    	["row", [
+   	 	"main-display",
+   	 	["display-image", "resources/magneticon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "10px"}]
+    	]],
         "resource-display",
 	    "prestige-button",
     	"blank",
@@ -2555,7 +2817,10 @@ addLayer("F", {
                     ["display-text", function() {
                     	return "Sacrifice your tin for a fire point."
                     }],
-                    ["display-text", function() { return "You have <span style='text-shadow: 0px 0px 10px red'>"+player.F.fp+"</span> fire points" }, {"color": "red"} ],
+                    ["row", [
+                 	   ["display-text", function() { return "You have <span style='text-shadow: 0px 0px 10px red'>"+player.F.fp+"</span> fire points" }, {"color": "red"} ],
+                 	   ["display-image", "resources/firepointicon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "0px"}]
+                	]],
                     "blank",
                     ["buyable", 11],
                     "blank",
@@ -2584,7 +2849,11 @@ addLayer("F", {
     },
     row: 2, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
-        {key: "f", description: "F: Reset for a Fire stage.", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        {
+            key: "f", // What the hotkey button is. Use uppercase if it's combined with shift, or "ctrl+x" for holding down ctrl.
+            description: "f: reset your cash for fire stages", // The description of the hotkey that is displayed in the game's How To Play tab
+            onPress() { if (player.F.unlocked) if (canReset(this.layer)) doReset("F") },
+        }
     ],
     buyables: {
     	11: {
@@ -2618,6 +2887,18 @@ addLayer("F", {
 		    currencyInternalName: "fp",
 		    currencyLayer: "F"
 	    },
+	    12: {
+		    title: "Red Hot Sticks",
+		    description: "x100 sticks",
+		    cost: new Decimal(2),
+		    style: {
+			    "border-radius": "50%"
+			},
+			currencyDisplayName: "fire points",
+		    currencyInternalName: "fp",
+		    currencyLayer: "F",
+		    unlocked(){return hasMilestone("F", 5)}
+	    },
 	    21: {
 		    title: "Volcanic Experience",
 		    description: "x10 experience",
@@ -2628,6 +2909,18 @@ addLayer("F", {
 			currencyDisplayName: "fire points",
 		    currencyInternalName: "fp",
 		    currencyLayer: "F"
+	    },
+	    22: {
+		    title: "Molten Experience",
+		    description: "x100 experience",
+		    cost: new Decimal(2),
+		    style: {
+			    "border-radius": "50%"
+			},
+			currencyDisplayName: "fire points",
+		    currencyInternalName: "fp",
+		    currencyLayer: "F",
+		    unlocked(){return hasMilestone("F", 5)}
 	    },
 	    31: {
 		    title: "Scorching Wood",
@@ -2641,6 +2934,18 @@ addLayer("F", {
 		    currencyInternalName: "fp",
 		    currencyLayer: "F"
 	    },
+	    32: {
+		    title: "Solar Wood",
+		    description: "x100 wood",
+		    cost: new Decimal(2),
+		    style: {
+			    "border-radius": "50%"
+			},
+			currencyDisplayName: "fire points",
+		    currencyInternalName: "fp",
+		    currencyLayer: "F",
+		    unlocked(){return hasMilestone("F", 5)}
+	    },
 	    41: {
 		    title: "Burning Speed",
 		    description: "x100 research per researcher, unlock new tech",
@@ -2652,6 +2957,18 @@ addLayer("F", {
 			currencyDisplayName: "fire points",
 		    currencyInternalName: "fp",
 		    currencyLayer: "F"
+	    },
+	    42: {
+		    title: "Fork and Volcano",
+		    description: "Unlock new battery challenges",
+		    cost: new Decimal(2),
+		    style: {
+			    "border-radius": "50%"
+			},
+			currencyDisplayName: "fire points",
+		    currencyInternalName: "fp",
+		    currencyLayer: "F",
+		    unlocked(){return hasMilestone("F", 5)}
 	    },
 	},
     milestones: {
@@ -2665,13 +2982,40 @@ addLayer("F", {
         	effectDescription: "Unlock sacrifice, more researcher upgrades",
         	done() { return player.F.points.gte(2) && hasUpgrade("AD", 11) },
             unlocked() { return hasUpgrade("AD", 11) }
-    	}
+    	},
+    	2: {
+        	requirementDescription: "Fire Stage 3",
+        	effectDescription() { return "x5 cash every milestone after this starting here<br>Currently: "+format(Decimal.max(new Decimal(5).pow(milestoneLength("F")-2), new Decimal(1)))+"x"},
+        	done() { return player.F.points.gte(3) && hasUpgrade("CO", 21) },
+            unlocked() { return hasUpgrade("CO", 21) }
+    	},
+    	3: {
+        	requirementDescription: "Fire Stage 4",
+        	effectDescription() { return "x100 experience"},
+        	done() { return player.F.points.gte(4) && hasUpgrade("CO", 21) },
+            unlocked() { return hasUpgrade("CO", 21) }
+    	},
+    	4: {
+        	requirementDescription: "Fire Stage 5",
+        	effectDescription() { return "x100 sticks"},
+        	done() { return player.F.points.gte(5) && hasMilestone("C", 1) },
+            unlocked() { return hasMilestone("C", 1) }
+    	},
+    	5: {
+        	requirementDescription: "Fire Stage 6",
+        	effectDescription() { return "Unlock new sacrifice upgrades"},
+        	done() { return player.F.points.gte(6) && hasMilestone("C", 1) },
+            unlocked() { return hasMilestone("C", 1) }
+    	},
     },
     resetDescription: "Evolve for ",
     layerShown(){ return hasChallenge("B", 13) && inArea("main")},
     isActive(){return tmp[this.layer].layerShown},
     tabFormat: [
-    	["display-text", function() { return "You are on Fire Stage <em style='text-shadow: 0px 0px 10px red'>"+player.F.points+"</em>"}, { "color": "red", "font-size": "32px"}],
+    	["row", [
+    		["display-text", function() { return "You are on Fire Stage <em style='text-shadow: 0px 0px 10px red'>"+player.F.points+"</em>"}, { "color": "red", "font-size": "32px"}],
+    		["display-image", "resources/fireicon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "0px"}]
+    	]],
     	"resource-display",
 	    "prestige-button",
 	    "blank",
@@ -2699,8 +3043,15 @@ addLayer("AD", {
 	    twom: new Decimal(1),
 	    threem: new Decimal(1),
 	    fourm: new Decimal(1),
+	    fivem: new Decimal(1),
+	    sixm: new Decimal(1),
+	    sevenm: new Decimal(1),
+	    eightm: new Decimal(1),
 	    cap: new Decimal(2), // get tickspeed hardcapped
-	    ant: new Decimal("2e8")
+	    ant: new Decimal("2e8"),
+	    soft: new Decimal("2ee8"),
+	    reload: false,
+	    sacmult: new Decimal(1)
     }},
     nodeStyle: {
     	background: "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(0,0,0,1) 100%)",
@@ -2723,27 +3074,91 @@ addLayer("AD", {
     calculateAnti() { // Calculate antimatter gain (runs at 30 milli)
         onem = new Decimal(1) // one multiplier
         if ( hasAchievement("AD", 14) ) onem = onem.times(player.points.plus(1).log10().pow(0.1))
+        if (getBuyableAmount("AD", 22).gte(1)) onem = onem.times(new Decimal(2).pow(getBuyableAmount("AD", 22)))
+        twom = new Decimal(1) // two multi
+        if (getBuyableAmount("AD", 22).gte(2)) twom = twom.times(new Decimal(2).pow(getBuyableAmount("AD", 22).sub(1)))
+        threem = new Decimal(1) // three multi
+        if (getBuyableAmount("AD", 22).gte(3)) threem = threem.times(new Decimal(2).pow(getBuyableAmount("AD", 22).sub(2)))
+        fourm = new Decimal(1) // four multi
+        if (getBuyableAmount("AD", 22).gte(4)) fourm = fourm.times(new Decimal(2).pow(getBuyableAmount("AD", 22).sub(3)))
+        fivem = new Decimal(1) // five multi
+        if (getBuyableAmount("AD", 22).gte(5)) fivem = fivem.times(new Decimal(2).pow(getBuyableAmount("AD", 22).sub(4)))
+        sixm = new Decimal(1) // six multi
+        if (getBuyableAmount("AD", 22).gte(6)) sixm = sixm.times(new Decimal(2).pow(getBuyableAmount("AD", 22).sub(5)))
+        sevenm = new Decimal(1) // seven multi
+        if (getBuyableAmount("AD", 22).gte(7)) sevenm = sevenm.times(new Decimal(2).pow(getBuyableAmount("AD", 22).sub(6)))
+        eightm = new Decimal(1) // eight multi
+        if (getBuyableAmount("AD", 22).gte(8)) eightm = eightm.times(new Decimal(2).pow(getBuyableAmount("AD", 22).sub(7)))
+        eightm = eightm.times(player.AD.sacmult) //sacmult 8th
         player.AD.onem = onem // set display onem
+        player.AD.twom = twom // display twom
+        player.AD.threem = threem // display threem
+        player.AD.fourm = fourm // display fourm
+        player.AD.fivem = fivem // display fivem
+        player.AD.sixm = sixm // display sixm
+        player.AD.sevenm = sevenm // display sevenm
+        player.AD.eightm = eightm // display eightm
     	gain = new Decimal(1) // Antimatter per second
         one = new Decimal(0) // 1st dimensions per second
         two = new Decimal(0) // 2nd dimensions per second
         three = new Decimal(0) // 3rd dimensions per second
+        four = new Decimal(0) // 4th dimensions per second
+        five = new Decimal(0) // 5th dimensions per second
+        six = new Decimal(0) // 6th dimensions per second
+        seven = new Decimal(0) // 7th dimensions per second
         one = one.plus(getBuyableAmount("AD", 12).times(0.1)) // Dim 1 polynomial by dim 2
         two = two.plus(getBuyableAmount("AD", 13).times(0.1)) // Dim 2 polynomial by dim 3
         three = three.plus(getBuyableAmount("AD", 14).times(0.1)) // Dim 3 polynomial by dim 4
+        four = four.plus(getBuyableAmount("AD", 15).times(0.1)) // Dim 4 polynomial by dim 5
+        five = five.plus(getBuyableAmount("AD", 16).times(0.1)) // Dim 5 polynomial by dim 6
+        six = six.plus(getBuyableAmount("AD", 17).times(0.1)) // Dim 6 polynomial by dim 7
+        seven = seven.plus(getBuyableAmount("AD", 18).times(0.1)) // Dim 7 polynomial by dim 8
         gain = gain.plus(getBuyableAmount("AD", 11).times(onem)) // Dim 1 * One multi
+        one = one.times(twom) // Dim 2 boost to one
+        two = two.times(threem) // Dim 3 boost to two
+        three = three.times(fourm) // Dim 4 boost to three
+        four = four.times(fivem) // Dim 5 boost to four
+        five = five.times(sixm) // Dim 6 boost to five
+        six = six.times(sevenm) // Dim 7 boost to six
+        seven = seven.times(eightm) // Dim 8 boost to seven
         gain = gain.times(player.AD.tick) // tickspeed
         one = one.times(player.AD.tick) // tickspeed
         two = two.times(player.AD.tick) // tickspeed
         three = three.times(player.AD.tick) // tickspeed
+        four = four.times(player.AD.tick) // tickspeed
+        five = five.times(player.AD.tick) // tickspeed
+        six = six.times(player.AD.tick) // tickspeed
+        seven = seven.times(player.AD.tick) // tickspeed
+        if(hasAchievement("AD", 25)) gain = gain.times(10) // adch11 boost
         onereal = one.div(30) // divide
         tworeal = two.div(30) // divide
         threereal = three.div(30) // divide
+        fourreal = four.div(30) // divide
+        fivereal = five.div(30) // divide
+        sixreal = six.div(30) // divide
+        sevenreal = seven.div(30) // divide
         real = gain.div(30) // Divide by 30 mills so its actually seconds.
-        if( tmp.AD.layerShown ) if(player.AD.points.lt(player.AD.ant)) player.AD.points = player.AD.points.plus(real) // Add antimatter
+        
+        let ant = new Decimal("2e8")
+        let soft = new Decimal("2ee8")
+        if(hasUpgrade("AD", 12)) ant = new Decimal("2e16")
+        if(hasUpgrade("AD", 14)) ant = new Decimal("2ee16")
+        if(hasUpgrade("AD", 14)) soft = new Decimal("2e16")
+        if(hasUpgrade("AD", 21))soft=new Decimal("2e200")
+        player.AD.ant = ant
+        player.AD.soft = soft
+        
+        if(player.AD.points.gte(soft)) real = real.pow(0.8)
+        if(player.AD.points.gte(soft)) gain = gain.pow(0.8)
+        
+        if( tmp.AD.layerShown ) if(player.AD.points.lt(ant)) player.AD.points = player.AD.points.plus(real) // Add antimatter
         if(player.AD.points.lt(player.AD.ant)) setBuyableAmount(this.layer, 11, getBuyableAmount(this.layer, 11).plus(onereal))
         if(player.AD.points.lt(player.AD.ant)) setBuyableAmount(this.layer, 12, getBuyableAmount(this.layer, 12).plus(tworeal))
         if(player.AD.points.lt(player.AD.ant)) setBuyableAmount(this.layer, 13, getBuyableAmount(this.layer, 13).plus(threereal))
+        if(player.AD.points.lt(player.AD.ant)) setBuyableAmount(this.layer, 14, getBuyableAmount(this.layer, 14).plus(fourreal))
+        if(player.AD.points.lt(player.AD.ant)) setBuyableAmount(this.layer, 15, getBuyableAmount(this.layer, 15).plus(fivereal))
+        if(player.AD.points.lt(player.AD.ant)) setBuyableAmount(this.layer, 16, getBuyableAmount(this.layer, 16).plus(sixreal))
+        if(player.AD.points.lt(player.AD.ant)) setBuyableAmount(this.layer, 17, getBuyableAmount(this.layer, 17).plus(sevenreal))
         return gain
     },
     news: "test",
@@ -2817,8 +3232,8 @@ addLayer("AD", {
         	}
 	},
 	14: { // Dim 4
-        	cost() {
-                    return new Decimal(10000).plus(getBuyableAmount(this.layer, this.id).times(5000000000))
+        	cost(x) {
+                    return new Decimal(10000).times(new Decimal(hasUpgrade("AD", 13) ? "2" : "5e9").pow(x))
             },
             unlocked() {return hasAchievement(this.layer, 15)},
             style: {
@@ -2831,9 +3246,9 @@ addLayer("AD", {
         	canAfford() { return player.AD.points.gte( this.cost() ) },
         	buy() {
             	let first = new Decimal(10000)
-                let exp = new Decimal(5000000000)
-                let most = first.plus(getBuyableAmount(this.layer, this.id).times(exp))
-                let max = player[this.layer].points.div(most).floor()
+                let exp = hasUpgrade("AD", 13) ? new Decimal("2") : new Decimal("5e9")
+                let max = Decimal.affordGeometricSeries(player.AD.points, 10000, exp, getBuyableAmount(this.layer, this.id))
+                let most = Decimal.sumGeometricSeries(max, 10000, exp, getBuyableAmount(this.layer, this.id))
                 player[this.layer].points = player[this.layer].points.sub(most)
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(max))
                 setBuyableAmount(this.layer, 11, new Decimal(0))
@@ -2841,9 +3256,118 @@ addLayer("AD", {
                 setBuyableAmount(this.layer, 13, new Decimal(0))
         	}
 	},
-	21: { // Tickspeed
+	15: { // Dim 5
+        	cost(x) {
+                    return new Decimal("1e6").times(new Decimal(2).pow(x))
+            },
+            unlocked() {return getBuyableAmount("AD", 22).gte(1)},
+            style: {
+	              "width": "125px",
+	              "height": "75px",
+	              "border-radius": "0%"
+                },
+		title() { return "5th Dimension"},
+        	display() { return "Cost: "+format(this.cost())+" Antimatter"},
+        	canAfford() { return player.AD.points.gte( this.cost() ) },
+        	buy() {
+            	let first = new Decimal("1e6")
+                let exp = new Decimal(2)
+                let max = Decimal.affordGeometricSeries(player.AD.points, new Decimal(1e6), exp, getBuyableAmount(this.layer, this.id))
+                let most = Decimal.sumGeometricSeries(max, new Decimal(1e6), exp, getBuyableAmount(this.layer, this.id))
+                player[this.layer].points = player[this.layer].points.sub(most)
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(max))
+                setBuyableAmount(this.layer, 11, new Decimal(0))
+                setBuyableAmount(this.layer, 12, new Decimal(0))
+                setBuyableAmount(this.layer, 13, new Decimal(0))
+                setBuyableAmount(this.layer, 14, new Decimal(0))
+        	}
+	},
+	16: { // Dim 6
+        	cost(x) {
+                    return new Decimal("1e9").times(new Decimal(2).pow(x))
+            },
+            unlocked() {return getBuyableAmount("AD", 22).gte(2)},
+            style: {
+	              "width": "125px",
+	              "height": "75px",
+	              "border-radius": "0%"
+                },
+		title() { return "6th Dimension"},
+        	display() { return "Cost: "+format(this.cost())+" Antimatter"},
+        	canAfford() { return player.AD.points.gte( this.cost() ) },
+        	buy() {
+            	let first = new Decimal("1e9")
+                let exp = new Decimal(2)
+                let max = Decimal.affordGeometricSeries(player.AD.points, new Decimal("1e9"), exp, getBuyableAmount(this.layer, this.id))
+                let most = Decimal.sumGeometricSeries(max, new Decimal("1e9"), exp, getBuyableAmount(this.layer, this.id))
+                player[this.layer].points = player[this.layer].points.sub(most)
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(max))
+                setBuyableAmount(this.layer, 11, new Decimal(0))
+                setBuyableAmount(this.layer, 12, new Decimal(0))
+                setBuyableAmount(this.layer, 13, new Decimal(0))
+                setBuyableAmount(this.layer, 14, new Decimal(0))
+                setBuyableAmount(this.layer, 15, new Decimal(0))
+        	}
+	},
+	17: { // Dim 7
+        	cost(x) {
+                    return new Decimal("1e43").times(new Decimal(2).pow(x))
+            },
+            unlocked() {return getBuyableAmount("AD", 22).gte(3)},
+            style: {
+	              "width": "125px",
+	              "height": "75px",
+	              "border-radius": "0%"
+                },
+		title() { return "7th Dimension"},
+        	display() { return "Cost: "+format(this.cost())+" Antimatter"},
+        	canAfford() { return player.AD.points.gte( this.cost() ) },
+        	buy() {
+            	let first = new Decimal("1e43")
+                let exp = new Decimal(2)
+                let max = Decimal.affordGeometricSeries(player.AD.points, new Decimal("1e43"), exp, getBuyableAmount(this.layer, this.id))
+                let most = Decimal.sumGeometricSeries(max, new Decimal("1e43"), exp, getBuyableAmount(this.layer, this.id))
+                player[this.layer].points = player[this.layer].points.sub(most)
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(max))
+                setBuyableAmount(this.layer, 11, new Decimal(0))
+                setBuyableAmount(this.layer, 12, new Decimal(0))
+                setBuyableAmount(this.layer, 13, new Decimal(0))
+                setBuyableAmount(this.layer, 14, new Decimal(0))
+                setBuyableAmount(this.layer, 15, new Decimal(0))
+                setBuyableAmount(this.layer, 16, new Decimal(0))
+        	}
+	},
+	18: { // Dim 8
+        	cost(x) {
+                    return new Decimal("1e61").times(new Decimal(2).pow(x))
+            },
+            unlocked() {return getBuyableAmount("AD", 22).gte(4)},
+            style: {
+	              "width": "125px",
+	              "height": "75px",
+	              "border-radius": "0%"
+                },
+		title() { return "8th Dimension"},
+        	display() { return "Cost: "+format(this.cost())+" Antimatter"},
+        	canAfford() { return player.AD.points.gte( this.cost() ) },
+        	buy() {
+            	let first = new Decimal("1e61")
+                let exp = new Decimal(2)
+                let max = Decimal.affordGeometricSeries(player.AD.points, new Decimal("1e61"), exp, getBuyableAmount(this.layer, this.id))
+                let most = Decimal.sumGeometricSeries(max, new Decimal("1e61"), exp, getBuyableAmount(this.layer, this.id))
+                player[this.layer].points = player[this.layer].points.sub(most)
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(max))
+                setBuyableAmount(this.layer, 11, new Decimal(0))
+                setBuyableAmount(this.layer, 12, new Decimal(0))
+                setBuyableAmount(this.layer, 13, new Decimal(0))
+                setBuyableAmount(this.layer, 14, new Decimal(0))
+                setBuyableAmount(this.layer, 15, new Decimal(0))
+                setBuyableAmount(this.layer, 16, new Decimal(0))
+        	}
+	},
+	21: { // Tickspeed (xe10 after 34 amount)
         	cost() {
-                    return new Decimal(1000).times(new Decimal(10).pow(getBuyableAmount(this.layer, this.id)))
+                    return new Decimal(1000).times(Decimal.max(new Decimal(1e10).pow(getBuyableAmount(this.layer, this.id).sub(34)), new Decimal(1))).times(new Decimal(10).pow(getBuyableAmount(this.layer, this.id)))
             },
             style: {
 	              "width": "175px",
@@ -2851,20 +3375,106 @@ addLayer("AD", {
 	              "border-radius": "0%"
                 },
 		title() { return "Increase Tickspeed"},
-        	display() { return "Cost: "+format(this.cost())+" Antimatter <br> Tickspeed: "+player.AD.tick+"/s</br>"+"<br> You have a tickspeed maximum of "+format(new Decimal(2).pow(player.AD.cap))+"/s </br>"},
+        	display() { return "Cost: "+format(this.cost())+" Antimatter <br> Tickspeed: "+format(player.AD.tick)+"/s</br>"+"<br> You have a tickspeed maximum of "+format(new Decimal(2).pow(player.AD.cap))+"/s </br>"},
         	canAfford() { return player.AD.points.gte( this.cost() ) && getBuyableAmount(this.layer, this.id).lt(player.AD.cap) },
-        	buy() { // Each buy, x10, buy maxx
-            	let first = new Decimal(1000)
-                let exp = new Decimal(10)
-                let most = first.times(exp.pow(getBuyableAmount(this.layer, this.id)))
-                let max = player[this.layer].points.div(most).floor()
-                player[this.layer].points = player[this.layer].points.sub(most)
-                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(max))
+        	buy() { // Each buy, x10
+                player[this.layer].points = player[this.layer].points.sub(this.cost())
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
                 player.AD.tick = player.AD.tick.times(2)
                 setBuyableAmount(this.layer, 11, new Decimal(0))
                 setBuyableAmount(this.layer, 12, new Decimal(0))
                 setBuyableAmount(this.layer, 13, new Decimal(0))
                 setBuyableAmount(this.layer, 14, new Decimal(0))
+                setBuyableAmount(this.layer, 15, new Decimal(0))
+                setBuyableAmount(this.layer, 16, new Decimal(0))
+                setBuyableAmount(this.layer, 17, new Decimal(0))
+                setBuyableAmount(this.layer, 18, new Decimal(0))
+        	}
+	},
+	22: { // Dimboost (+15 8th dims)
+        	cost() { 
+        		let need = new Decimal(15)
+        		if(getBuyableAmount(this.layer, this.id).gte(5)) need = need.plus(new Decimal(15).times(getBuyableAmount(this.layer, this.id).sub(4)))
+        		return need
+        	},
+            style: {
+	              "width": "175px",
+	              "height": "125px",
+	              "border-radius": "0%"
+                },
+		title() { return "Dimension Boost ("+format(getBuyableAmount(this.layer, this.id))+")"},
+        	display() { 
+     	   	let dimneed = ""
+        		if(getBuyableAmount(this.layer, this.id).eq(0)) dimneed = "4th dimensions"
+        		if(getBuyableAmount(this.layer, this.id).eq(1)) dimneed = "5th dimensions"
+        		if(getBuyableAmount(this.layer, this.id).eq(2)) dimneed = "6th dimensions"
+        		if(getBuyableAmount(this.layer, this.id).eq(3)) dimneed = "7th dimensions"
+        		if(getBuyableAmount(this.layer, this.id).gte(4)) {
+        			dimneed = "8th dimensions"
+        		}
+ 	       	return "Cost: "+format(this.cost())+" "+dimneed+"<br>Also increases tickspeed maximum"
+        	},
+        	canAfford() { 
+        		let di = 0
+      	  	if(getBuyableAmount(this.layer, this.id).eq(0)) di = 14
+        		if(getBuyableAmount(this.layer, this.id).eq(1)) di = 15
+       	 	if(getBuyableAmount(this.layer, this.id).eq(2)) di = 16
+   	     	if(getBuyableAmount(this.layer, this.id).eq(3)) di = 17
+        		if(getBuyableAmount(this.layer, this.id).gte(4)) di = 18
+    	    	return getBuyableAmount(this.layer, di).gte( this.cost() )
+        	},
+        	buy() {
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                player.AD.cap = player.AD.cap.plus(8)
+                setBuyableAmount(this.layer, 11, new Decimal(0))
+                setBuyableAmount(this.layer, 12, new Decimal(0))
+                setBuyableAmount(this.layer, 13, new Decimal(0))
+                setBuyableAmount(this.layer, 14, new Decimal(0))
+                setBuyableAmount(this.layer, 15, new Decimal(0))
+                setBuyableAmount(this.layer, 16, new Decimal(0))
+                setBuyableAmount(this.layer, 17, new Decimal(0))
+                setBuyableAmount(this.layer, 18, new Decimal(0))
+                player.AD.points = new Decimal(0)
+                //DANG I FORGOT TO  RESET TICKSPEED
+                setBuyableAmount(this.layer, 21, new Decimal(0))
+                player.AD.tick = new Decimal(1)
+        	}
+		},
+		23: { // Dimensional Sacrifice
+        	cost() {
+                    return new Decimal(0)
+            },
+            unlocked() {return getBuyableAmount("CO", 12).gte(6)},
+            style: {
+	              "width": "100%",
+	              "height": "70px",
+	              "border-radius": "0%"
+                },
+		title() { return "Dimensional Sacrifice"},
+        	display() { 
+        		let sacmult = getBuyableAmount(this.layer, 11).plus(1).log10().div(10).pow(2)
+        		let real = Decimal.max(new Decimal(1), sacmult.sub(player.AD["sacmult"]))
+        		return "Reset your dimensions except for the 8th dimension for a boost to the 8th dimension.<br>Boost: "+format(real)+"x<br>Sacrifice Mult: "+format(player.AD["sacmult"])+"x"
+        	},
+        	canAfford() {
+        		if(getBuyableAmount("AD", 18).lte(0))return false
+        		// formula is ((log10(1stdims))/10)^2
+        		let sacmult = getBuyableAmount(this.layer, 11).plus(1).log10().div(10).pow(2)
+        		let real = Decimal.max(new Decimal(1), sacmult.sub(player.AD["sacmult"]))
+        		if(real.lte(1))return false
+        		return true
+        	},
+        	buy() { // Disable if new mult is less or equal to 1 or no 8th dims
+        		let sacmult = getBuyableAmount(this.layer, 11).plus(1).log10().div(10).pow(2)
+                player.AD["sacmult"] = sacmult
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                setBuyableAmount(this.layer, 11, new Decimal(0))
+                setBuyableAmount(this.layer, 12, new Decimal(0))
+                setBuyableAmount(this.layer, 13, new Decimal(0))
+                setBuyableAmount(this.layer, 14, new Decimal(0))
+                setBuyableAmount(this.layer, 15, new Decimal(0))
+                setBuyableAmount(this.layer, 16, new Decimal(0))
+                setBuyableAmount(this.layer, 17, new Decimal(0))
         	}
 	},
     },
@@ -2878,13 +3488,25 @@ addLayer("AD", {
                     "blank",
                     ["buyable", 21],
                     "blank",
+                    ["buyable", 23],
+                    "blank",
                     ["row", [ ["display-text", function() { return "<b>You have "+format(getBuyableAmount("AD", 11))+" 1st dimensions <br>×"+format(player.AD.onem)+"</br></b>"}, { "font-size": "16px"}], "blank", ["buyable", 11]] ],
                     "blank",
                     ["row", [ ["display-text", function() { return "<b>You have "+format(getBuyableAmount("AD", 12))+" 2nd dimensions <br>×"+format(player.AD.twom)+"</br></b>"}, { "font-size": "16px"}], "blank", ["buyable", 12]] ],
                     "blank",
                     ["row", [ ["display-text", function() { return "<b>You have "+format(getBuyableAmount("AD", 13))+" 3rd dimensions <br>×"+format(player.AD.threem)+"</br></b>"}, { "font-size": "16px"}], "blank", ["buyable", 13]] ],
                     "blank",
-                    ["row", [ ["display-text", function() { return "<b>You have "+format(getBuyableAmount("AD", 14))+" 4th dimensions <br>×"+format(player.AD.fourm)+"</br></b>"}, { "font-size": "16px"}], "blank", ["buyable", 14]] ]
+                    ["row", [ ["display-text", function() { return "<b>You have "+format(getBuyableAmount("AD", 14))+" 4th dimensions <br>×"+format(player.AD.fourm)+"</br></b>"}, { "font-size": "16px"}], "blank", ["buyable", 14]] ],
+                    "blank",
+                    ["row", [ ["display-text", function() { return "<b>You have "+format(getBuyableAmount("AD", 15))+" 5th dimensions <br>×"+format(player.AD.fivem)+"</br></b>"}, { "font-size": "16px"}], "blank", ["buyable", 15]] ],
+                    "blank",
+                    ["row", [ ["display-text", function() { return "<b>You have "+format(getBuyableAmount("AD", 16))+" 6th dimensions <br>×"+format(player.AD.sixm)+"</br></b>"}, { "font-size": "16px"}], "blank", ["buyable", 16]] ],
+                    "blank",
+                    ["row", [ ["display-text", function() { return "<b>You have "+format(getBuyableAmount("AD", 17))+" 7th dimensions <br>×"+format(player.AD.sevenm)+"</br></b>"}, { "font-size": "16px"}], "blank", ["buyable", 17]] ],
+                    "blank",
+                    ["row", [ ["display-text", function() { return "<b>You have "+format(getBuyableAmount("AD", 18))+" 8th dimensions <br>×"+format(player.AD.eightm)+"</br></b>"}, { "font-size": "16px"}], "blank", ["buyable", 18]] ],
+                    "blank",
+                    ["buyable", 22]
                 ],
             },
             Upgrades: {
@@ -2936,6 +3558,54 @@ addLayer("AD", {
 		    tooltip: "have 1 4th dimension <br> reward: a very huge cost scale :troll: </br>",
 		    image: "resources/Adch6.png"
     	},
+    	21: {
+        	name: "a really high five",
+        	done() { return getBuyableAmount(this.layer, 15).gte(1) },
+		    tooltip: "have 1 5th dimension",
+		    image: "resources/Adch7.png"
+    	},
+    	22: {
+        	name: "we also couldnt afford 9",
+        	done() { return getBuyableAmount(this.layer, 16).gte(1) },
+		    tooltip: "have 1 6th dimension",
+		    image: "resources/Adch8.png"
+    	},
+    	23: {
+        	name: "triple seven",
+        	done() { return getBuyableAmount(this.layer, 17).gte(3) },
+		    tooltip: "have 3 7th dimensions",
+		    image: "resources/Adch9.png"
+    	},
+    	24: {
+        	name: "-90 degrees to infinity",
+        	done() { return getBuyableAmount(this.layer, 18).gte(1) },
+		    tooltip: "have 1 8th dimensions",
+		    image: "resources/Adch10.png"
+    	},
+    	25: {
+        	name: "fast and boostrious",
+        	done() { return getBuyableAmount(this.layer, 22).gte(10) },
+		    tooltip: "do 10 dimension boosts<br>reward: 10x antimatter",
+		    image: "resources/Adch11.png"
+    	},
+    	26: {
+        	name: "1 e google",
+        	done() { return player[this.layer].points.gte("1e100") },
+		    tooltip: "have 1e100 antimatter<br>reward: unlock new techs in tech tree",
+		    image: "resources/Adch12.png"
+    	},
+    	31: {
+        	name: "toss it in the trash",
+        	done() { return player[this.layer].sacmult.gte(2) },
+		    tooltip: "do a dim sacrifice<br>reward: new AD upgrades",
+		    image: "resources/Adch13.png"
+    	},
+    	32: {
+        	name: "boostrious and fast 2",
+        	done() { return getBuyableAmount(this.layer, 22).gte(30) },
+		    tooltip: "do 30 dimension boosts",
+		    image: "resources/Adch14.png"
+    	},
     },
     upgrades: {
 	    11: {
@@ -2944,220 +3614,61 @@ addLayer("AD", {
 		cost: new Decimal("1e6"),
 		unlocked() { return hasAchievement("ACH", 65) }
 	    },
+	    12: {
+		title: "Sum Moar",
+		description: "Move the antimatter hardcap to 2e16",
+		cost: new Decimal("2e8"),
+		unlocked() { return hasUpgrade("M2", 19) }
+	    },
+	    13: {
+		title: "CostCo",
+		description: "4th dimension cost scale is greatly better",
+		cost: new Decimal("4e8"),
+		unlocked() { return hasUpgrade("M2", 19) }
+	    },
+	    14: {
+		title: "Softer Matter",
+		description: "Antimatter hard cap turns into soft cap",
+		cost: new Decimal("2e16"),
+		unlocked() { return hasUpgrade("M2", 19) }
+	    },
+	    21: {
+		title: "AntiAntiMatter",
+		description: "Move the antimatter softcap to 2e200",
+		cost: new Decimal("1e100"),
+		unlocked() { return hasAchievement("AD", 31) }
+	    },
+	    22: {
+		title: "AntiExperience",
+		description: "Experience is boosted by your antimatter",
+		cost: new Decimal("1e191"),
+		unlocked() { return hasAchievement("AD", 31) },
+		effect() {return player.AD.points.plus(1).log(2)},
+		effectDisplay() {return format(this.effect())+"x"},
+		tooltip : "log2(x+1)"
+	    },
     },
     tabFormat: [
-        ["display-text", function() { return player.AD.news }, { "font-size": "20px"}],
-    	"main-display",
+        ["display-text", function() { return "<div id='newstick'><div id='news'></div></div>"} ],
+        ["row", [
+    		"main-display",
+    		["display-image", "resources/antimattericon.png", {"width": "50px", "height": "50px", "position": "relative", "bottom": "5px"}]
+    	]],
         ["display-text", function() { return "You are making <b><font size=+1>"+format(tmp.AD.calculateAnti)+"</b></font> antimatter/s"}, { "font-size": "20px"}],
         "resource-display",
+        ["display-text", function() { if(player.AD.points.gte(player.AD.soft))return "Softcapped"}],
         ["display-text", function() { if(player.AD.points.gte(player.AD.ant))return "You have the maximum antimatter! <br>Maximum antimatter: "+format(player.AD.ant)+"</br>"}, { "color": "red", "font-size": "32px"}],
 	    "blank",
 	    ["microtabs", "stuff"]
-    ]
-}),
-
-setInterval(function () { // news ticker
-                dice = Math.floor( Math.random() * 101 )
-                if ( dice == 0 )
-                    player.AD.news = "Why am i here..."
-                if ( dice == 1 )
-                    player.AD.news = "AntiExcavation Discoveries"
-                if ( dice == 2 )
-                    player.AD.news = "Breaking news: No one cares"
-                if ( dice == 3 )
-                    player.AD.news = "It's the apocalypse!!"
-                if ( dice == 4 )
-                    player.AD.news = "Boring news..."
-                if ( dice == 5 )
-                    player.AD.news = "Its not a collab guys..."
-                if ( dice == 6 )
-                    player.AD.news = "Baba is not you"
-                if ( dice == 7 )
-                    player.AD.news = "Functioning news ticker? No way."
-                if ( dice == 8 )
-                    player.AD.news = "Why is it exclusive?"
-                if ( dice == 9 )
-                    player.AD.news = "If you are incremental, clap your hands.."
-                if ( dice == 10 )
-                    player.AD.news = "AntimatterettamitnA"
-                if ( dice == 11 )
-                    player.AD.news = "Its sad. :("
-                if ( dice == 12 )
-                    player.AD.news = "THIS IS COPY!1!1!1 - mobile game ad player"
-                if ( dice == 13 )
-                    player.AD.news = "13, the unlucky number"
-                if ( dice == 14 )
-                    player.AD.news = "Look behind you!"
-                if ( dice == 15 )
-                    player.AD.news = "Can you catch all news messages?"
-                if ( dice == 16 )
-                    player.AD.news = "Its a dream!"
-                if ( dice == 17 )
-                    player.AD.news = "Are you sure about that? Are you-"
-                if ( dice == 18 )
-                    player.AD.news = "Stop. Look up."
-                if ( dice == 19 )
-                    player.AD.news = "Matter Excavations"
-                if ( dice == 20 )
-                    player.AD.news = "Do not read this news ticker. Please. I am begging you. Too late you are cursed now..."
-                if ( dice == 21 )
-                    player.AD.news = "You need to touch "+format(player.AD.points)+" grass."
-                if ( dice == 22 )
-                    player.AD.news = "Get softcapped. Wait, actually get HARD RESETED"
-                if ( dice == 23 )
-                    player.AD.news = "Who wrote news tickers? Well it all started with the big bang-"
-                if ( dice == 24 )
-                    player.AD.news = "Do your homework first before playing..."
-                if ( dice == 25 )
-                    player.AD.news = "-.-.-.-.-.-.--.-.-.-.-.-.--.--.----.--.-.-."
-                if ( dice == 26 )
-                    player.AD.news = "Dont trust them. By them i mean the NEWS TICKERS! But then that means you wont trust this one..."
-                if ( dice == 27 )
-                    player.AD.news = "Did you wait 5 minutes?"
-                if ( dice == 28 )
-                    player.AD.news = "Who is better... CFI... or GCI... or... Both?"
-                if ( dice == 29 )
-                    player.AD.news = "The news ticker before this one was 100% true."
-                if ( dice == 30 )
-                    player.AD.news = "The news ticker after this is 100% false."
-                if ( dice == 31 )
-                    player.AD.news = "The news ticker before this is the game's opinion."
-                if ( dice == 32 )
-                    player.AD.news = "The news ticker after this was written by a child."
-                if ( dice == 33 )
-                    player.AD.news = "News tickers are 1% faster!"
-                if ( dice == 34 )
-                    player.AD.news = "This was written by an adult. (ReAl)"
-                if ( dice == 35 )
-                    player.AD.news = "Quote the news ticker after this in a messaging app."
-                if ( dice == 36 )
-                    player.AD.news = "Make sure to hit that subscribe button..."
-                if ( dice == 37 )
-                    player.AD.news = "WHY IS IT NOT SCROLLING :("
-                if ( dice == 38 )
-                    player.AD.news = "Easy Medium Hard Difficult. Whats next?"
-                if ( dice == 39 )
-                    player.AD.news = "The news ticker before this was a fake one"
-                if ( dice == 40 )
-                    player.AD.news = "The news ticker after this describes the news ticker after it."
-                if ( dice == 41 )
-                    player.AD.news = "Not stolen from hevi"
-                if ( dice == 42 )
-                    player.AD.news = "True endgame... Is to get all achievements!"
-                if ( dice == 43 )
-                    player.AD.news = "Mercury cannot be colonized as both sides are extremely hot and cold "
-                if ( dice == 44 )
-                    player.AD.news = "Whoops, were running out of ideas !!"
-                if ( dice == 45 )
-                    player.AD.news = "This is not news at all! It's olds!"
-                if ( dice == 46 )
-                    player.AD.news = "*Insert a funny joke here*"
-                if ( dice == 47 )
-                    player.AD.news = "You better laughed at the previous news ticker."
-                if ( dice == 48 )
-                    player.AD.news = "FibbonacciccanobbiF"
-                if ( dice == 49 )
-                    player.AD.news = "Dont check out the code for this, its jumbled around"
-                if ( dice == 50 )
-                    player.AD.news = "Halfway from 100! Let's go!!!"
-                if ( dice == 51 )
-                    player.AD.news = "Shoutout to AOAIWJN128J(#82("
-                if ( dice == 52 )
-                    player.AD.news = "Breaking News: Local man in possesion of antimatter"
-                if ( dice == 53 )
-                    player.AD.news = "Would you rather have no tin or have no stone?"
-                if ( dice == 54 )
-                    player.AD.news = "Why is this here? This aint relevant.."
-                if ( dice == 55 )
-                    player.AD.news = "Never gonna give you up, never gonna let you down"
-                if ( dice == 56 )
-                    player.AD.news = "If you said you were telling lies then when you said that would be a lie.."
-                if ( dice == 57 )
-                    player.AD.news = "Paradox"
-                if ( dice == 58 )
-                    player.AD.news = "2.718281828459045"
-                if ( dice == 59 )
-                    player.AD.news = "What's e^iπ + 1?"
-                if ( dice == 60 )
-                    player.AD.news = "3.14159265"
-                if ( dice == 61 )
-                    player.AD.news = "Wheres Wally?"
-                if ( dice == 62 )
-                    player.AD.news = "Raman Tawer"
-                if ( dice == 63 )
-                    player.AD.news = "Sheesh bro, you played this for "+formatTime(player.timePlayed)+"!?!?"
-                if ( dice == 64 )
-                    player.AD.news = "Super Mario 64"
-                if ( dice == 65 )
-                    player.AD.news = "This isnt excavation is it?"
-                if ( dice == 66 )
-                    player.AD.news = "Too much news for your brain to handle.."
-                if ( dice == 67 )
-                    player.AD.news = "Breaking News: Local airplane spotted with 10 tons of.. sticks?"
-                if ( dice == 68 )
-                    player.AD.news = "Breaking News: Local man spotted stealing "+format(player.TI.points)+" tin!"
-                if ( dice == 69 )
-                    player.AD.news = "Breaking News: Local Tree spotted that has grown "+format(player.TR.points)+" cm!"
-                if ( dice == 70 )
-                    player.AD.news = "Breaking News: Local news ticker spreading fake news. Dont believe everything you see."
-                if ( dice == 71 )
-                    player.AD.news = "Breaking News: Today we will be repairing news, because someone broke it."
-                if ( dice == 72 )
-                    player.AD.news = "Are yah sure about that"
-                if ( dice == 73 )
-                    player.AD.news = "Krusty Krab, The most delicious burgers! Call now."
-                if ( dice == 74 )
-                    player.AD.news = "Krusty Krab, no health inspectors has come in. Call now."
-                if ( dice == 75 )
-                    player.AD.news = "Simon says... laugh at the news ticker after this one."
-                if ( dice == 76 )
-                    player.AD.news = "Breaking News: Sticks have been spotted ALOT lately. It was spotted at canals, toilets. And beds!?!?"
-                if ( dice == 77 )
-                    player.AD.news = "Breaking News: Deforestation is at an all-time high. Detectives say that the suspect includes you."
-                if ( dice == 78 )
-                    player.AD.news = "Breaking News: The earth's stone has been quirking lately. Some say it's the work of... reseting?"
-                if ( dice == 79 )
-                    player.AD.news = "Breaking News: Leaf production from trees is at an all-time world record peak high. These trees are called; The Excavation Trees"
-                if ( dice == 80 )
-                    player.AD.news = "Breaking News: Researchers have been protesting of their minimum-wage salary. Researchers are quitting at a very alarming rate."
-                if ( dice == 81 )
-                    player.AD.news = "Bnuy was here"
-                if ( dice == 82 )
-                    player.AD.news = "This new virus called Vorona, has been infecting trees lately."
-                if ( dice == 83 )
-                    player.AD.news = "Breaking News: Local man collecting lots of fame from planting trees."
-                if ( dice == 84 )
-                    player.AD.news = "Breaking News: Local rainforest spotted with familiar trees from other rainforests. Is it a coincidence!?!?"
-                if ( dice == 85 )
-                    player.AD.news = "Breaking News: Market crashed after alot of tons of tin started to circulate around the world"
-                if ( dice == 86 )
-                    player.AD.news = "Breaking News: National Man electrocuted with "+format(player.B.points)+" watts of electricity."
-                if ( dice == 87 )
-                    player.AD.news = "Breaking News: Local man finds gold after using a magnet on a tree."
-                if ( dice == 88 )
-                    player.AD.news = "Breaking News: Local woman invents a way to scale how severe fires are, called stages."
-                if ( dice == 89 )
-                    player.AD.news = "Breaking News: Miner Comp © finds a cool ton of coal to cook on."
-                if ( dice == 90 )
-                    player.AD.news = "Breaking News: Local boy manages to research all the internet, gaining lots of tech."
-                if ( dice == 91 )
-                    player.AD.news = "Breaking News: National Tree spotted, with a whopping length of about 2718281828459045 centimeters."
-                if ( dice == 92 )
-                    player.AD.news = "Breaking News: Local girl transforms matter into antimatter using the so called Dimensions."
-                if ( dice == 93 )
-                    player.AD.news = "Raman Tawer: DLC"
-                if ( dice == 94 )
-                    player.AD.news = "Croak or Ribbit?"
-                if ( dice == 95 )
-                    player.AD.news = "Breaking News: Supercomputer built by Mlon Eusk reaches 1 Petabytes of storage. He said that the secret was... Trees."
-                if ( dice == 96 )
-                    player.AD.news = "Breaking News: Local man claims to have reached all the so-called Milestones, claiming that he beat the fictional Tree."
-                if ( dice == 97 )
-                    player.AD.news = "Breaking News: : sweN gnikaerB"
-                if ( dice == 98 )
-                    player.AD.news = "Real annoying man. Reaaal annoyiinngg maaannn.."
-                if ( dice == 99 )
-                    player.AD.news = "We couldnt afford 1 more news ticker, sorry for the inconvenience."
-                if ( dice == 100 )
-                    player.AD.news = "ITS LESS THAN 101!!!!!!"
-}, 5000)
+    ],
+    fixtick(){
+    	if(player.tab=="AD"){
+    		if(!player.AD.newsreload){
+    			setTimeout(newsticking, 1000)
+    			player.AD.newsreload = true
+    		}
+    	} else {
+    		player.AD.newsreload = false
+    	}
+    }
+})

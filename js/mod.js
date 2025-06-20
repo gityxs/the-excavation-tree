@@ -12,11 +12,42 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.25",
-	name: "The Universal Update Pt.1",
+	num: "1.3",
+	name: "The Universal Update Pt.2",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
+	<h3>v1.3 The Universal Update Pt.2</h3><br>
+		- Added Monoium layer in Static-A<br>
+		- Added Difficult sticks layer in Chall-E26-E<br>
+		- Added 5th - 8th antimatter dims<br>
+		- Added Dimension boost in AD<br>
+		- Added even more achievements<br>
+		- Added more AD achievements<br>
+		- Added export file and import file<br>
+		- Added icons for (mostly) all currencies<br>
+		- Added more tech tree upgrades<br>
+		- Added Copper Layer<br>
+		- Added copper upgrade tree<br>
+		- Added new fire stage milestones<br>
+		- Added more coal milestones<br>
+		- Added new sacrifice upgrades<br>
+		- Added more battery challenges<br>
+		- Added more battery upgrades<br>
+		- Added more magnet upgrades<br>
+		- Added rank and tier for copper layer<br>
+		- Added dimensional sacrifice in AD<br>
+		- Fixed battery challenge Tree Roots bug<br>
+		- Fixed mini tree back buttons<br>
+		- Fixed tin and coal requiring decimals<br>
+		- Adjusted all passive gen stick upgs (Works independently)<br>
+		- Adjusted old AD newsticker<br>
+		- Adjusted option buttons<br>
+		- Adjusted Recovery layer clarification<br>
+		- Adjusted tech tree looks<br>
+		- Adjusted magnet layer attraction text<br>
+		- Removed fix battery upgrades option<br>
+		- Bumped endgame<br><br>
     <h3>v1.25 The Universal Update Pt.1</h3><br>
         - Added space background (toggleable on settings)<br>
         - You can now fix the export button in the settings<br>
@@ -29,7 +60,7 @@ let changelog = `<h1>Changelog:</h1><br>
         - Added seperate trees<br>
         - Bumped endgame<br>
         - Added more challenges<br>
-        - Added more milestones<br>
+        - Added more milestones<br><br>
     <h3>v1.2 The Explosion Update</h3><br>
 		- Fixed battery upgrades<br>
 		- Fixed some softlocks<br>
@@ -43,7 +74,7 @@ let changelog = `<h1>Changelog:</h1><br>
         - Added tons of achievements<br>
         - Added more themes<br>
         - Please fix your battery upgrades in the options tab <br>
-        - Added more challenges<br>
+        - Added more challenges<br><br>
 	<h3>v1.1</h3><br>
 		- Fixed decimal precision<br>
 		- Fixed typos<br>
@@ -119,6 +150,11 @@ function getPointGen() {
 	if ( hasUpgrade("F", 21) ) gain = gain.times(10)
 	if ( hasUpgrade("ms", 24) ) gain = gain.times(2)
 	gain = gain.times(getBuyableAmount("C", 21).times(2).plus(1)) // coal fried exp
+	if(hasMilestone("F", 3))gain=gain.times(100)
+	if(hasMilestone("C", 1))gain=gain.times(10)
+	if ( hasUpgrade("F", 22) ) gain = gain.times(100)
+	if(hasUpgrade("B", 32))gain=gain.times(upgradeEffect("B", 32))
+	if(hasUpgrade("AD", 22))gain=gain.times(upgradeEffect("AD", 22))
 	
 	if ( inChallenge("B", 12) )
 	    gain = gain.div(100)
@@ -134,12 +170,12 @@ function addedPlayerData() { return {
 
 // Display extra things at the top of the page
 var displayThings = [
-	"Current Endgame: 'A+' and 'upgrades? it's all yours my friend' achievements"
+	"Current Endgame: 2e42 experience"
 ]
 
 // Determines when the game "ends"
 function isEndgame() {
-	return hasAchievement("ACH", 102) && hasAchievement("ACH", 106)
+	return player.points.gte(new Decimal("2e42"))
 }
 
 
