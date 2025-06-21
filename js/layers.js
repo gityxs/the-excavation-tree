@@ -2747,9 +2747,9 @@ addLayer("M", {
 		currencyInternalName: "cash",
 		currencyLayer: "M",
 		unlocked() {return hasUpgrade(this.layer, 11)},
-		effect() { return player.TR.points.log10().pow(0.2) },
+		effect() { return player.TR.points.plus(1).log10().pow(0.2) },
 		effectDisplay() { return format(upgradeEffect("M", 12).plus(1))+"x" },
-		tooltip: "log(x)^0.2"
+		tooltip: "log(x+1)^0.2"
 	    },
 	    13: {
 		title: "Monopoly",
