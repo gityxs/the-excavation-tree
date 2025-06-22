@@ -409,7 +409,7 @@ addLayer("W", {
 			if(hasMilestone("C", 0)) gain2 = gain2.times(3);
 			gain2 = gain2.times(getBuyableAmount("C", 31).times(2).plus(1))
 			if(hasMilestone("C", 1))gain2=gain2.times(10)
-			if ( hasUpgrade("F", 32) ) mult = mult.times(100)
+			if ( hasUpgrade("F", 32) )gain2=gain2.times(100)
 			if( player.L.status.eq(1) ) {
 		        gain2 = gain2.times(0.5)
 	        }
