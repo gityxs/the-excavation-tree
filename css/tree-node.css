@@ -6,7 +6,7 @@
 	border-color: rgba(0, 0, 0, 0.125);
 	border-radius: 50%;
 	box-shadow: var(--hqProperty2a), var(--hqProperty2b);
-	font-size: 40px;
+	font-size: 30px;
 	font-family: "Lucida Console", "Courier New", monospace;
 	color: rgba(0, 0, 0, 0.5);
 	text-shadow: var(--hqProperty3);
@@ -36,7 +36,7 @@
 .smallNode {
 	height: 60px;
 	width: 60px;
-	font-size: 30px;
+	font-size: 18px;
 }
 
 .resetNotify {
